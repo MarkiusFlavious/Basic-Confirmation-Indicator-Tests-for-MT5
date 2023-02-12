@@ -10,3 +10,6 @@ If you just want to view the source code look at the .mq5 files. If you want to 
 
 ## Indicators:
 The provided indicators come from the MQL5 codebase and are considered freeware. If you encounter errors about being unable to locate an indicator, either change the source code to point the EA to where the Indicator is stored. The EAs here with either look in MQL5/Indicators/Downloads or just MQL5/Indicators. 
+
+## Notes:
+The ATR Channel Indicator is used for calculating take profit and stop loss. The latest version of MT5 also comes with a broken smoothalgorithms.mqh and while a fixed version of the is readily available on the MQL5 Codebase, it decided to add my copy here. Place it in MQL5/Include.
