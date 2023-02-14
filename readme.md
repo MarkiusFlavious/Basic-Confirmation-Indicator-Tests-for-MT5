@@ -12,7 +12,7 @@ I have it set up so that the EAs will trade with the following rules:
 
 ## How to make your own test EA:
 I will be using the SSL indicator as an example here. I will also be assuming that you know how to use MetaTrader 5 and MetaEditor (which comes with MT5.)   
-*** NOTE:*** While it's not entirely necessary, I highly recommend using only free indicators that come with their source code. Having the source code available makes passing the inputs into [iCustom](https://www.mql5.com/en/docs/indicators/icustom) easier becuase some indicators use their own custom enums. In addition to this you need to know which buffer values to pull data from and having the source code makes finding it much easier.  
+***NOTE:*** While it's not entirely necessary, I highly recommend using only free indicators that come with their source code. Having the source code available makes passing the inputs into [iCustom](https://www.mql5.com/en/docs/indicators/icustom) easier becuase some indicators use their own custom enums. In addition to this you need to know which buffer values to pull data from and having the source code makes finding it much easier.  
 
 ### IndiProbe
 With all that in mind, it's usually a good idea to "probe" and or double check that you have the correct buffer value. For that I use a very basic EA that I called IndiProbe. First let's look at the initialization function of our indicator.  
