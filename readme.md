@@ -1,7 +1,7 @@
 # MT5 Simple Confirmation Indicator Tester 
-The main file in this repository is Basic Template.mq5 which is a template that I created in order to speed up the process of creating simple Expert Advisors ment for backtesting confirmation indicators in MT5's strategy tester. I have also included all the EAs I've created so far with this template as well as the required indicators. [^]  
+The main file in this repository is Basic Template.mq5 which is a template that I created in order to speed up the process of creating simple Expert Advisors ment for backtesting confirmation indicators in MT5's strategy tester. I have also included all the EAs I've created so far with this template as well as the required indicators. [^1]  
 
-[^]: Some of the indicators I've tested used the file smoothalgorithms.mqh which is broken in the latest version of MetaTrader 5. Such indicators usually come with a fixed version of this file. I have added it here as well, place it in your Includes folder.
+[^1]: Some of the indicators I've tested used the file smoothalgorithms.mqh which is broken in the latest version of MetaTrader 5. Such indicators usually come with a fixed version of this file. I have added it here as well, place it in your Includes folder.
 
 ###### The Basic Rules of Trading:  
 I have it set up so that the EAs will trade with the following rules:
