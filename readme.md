@@ -97,7 +97,7 @@ Make sure that you add the inputs into iCustom in the same order that they appea
 Firstly here's a small explanation. I created a custom enum called enTradeSignal with the following values:
 - buy_signal
 - sell_signal
-- no_signal  
+- no_signal
 The trade signal function is of this type and must return one of those 3 value that then gets passed to the Check/Modify and Enter Position functions.  
 
 The rules for the SSL indicator are simple. The aqua line crossing above the orange line is a buy signal and the the opposite  is a sell signal. 
