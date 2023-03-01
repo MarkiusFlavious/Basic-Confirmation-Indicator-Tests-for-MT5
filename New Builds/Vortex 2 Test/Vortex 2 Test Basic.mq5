@@ -1,9 +1,9 @@
 //+------------------------------------------------------------------+
-//| Includes:                                                        |
+//| Includes                                                         |
 //+------------------------------------------------------------------+
 #include <Trade/Trade.mqh>
 //+------------------------------------------------------------------+
-//| Custom Enums:                                                    |
+//| Custom Enums                                                     |
 //+------------------------------------------------------------------+
 enum TRADING_TERMS {
    BUY_SIGNAL,
@@ -15,7 +15,7 @@ enum TRADING_TERMS {
    GO_SHORT
 };
 //+------------------------------------------------------------------+
-//| Inputs:                                                          |
+//| Inputs                                                           |
 //+------------------------------------------------------------------+
 input group "Use Current or Different Timeframe:"
 input ENUM_TIMEFRAMES input_timeframe = PERIOD_CURRENT; // Timeframe
@@ -27,35 +27,40 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_ap = PRICE_TYPICAL; // ATR Channel Applied Price
 
+input group "Vortex 2 Input:"
+input int input_vortex_period = 32; // Vortex period
 //+------------------------------------------------------------------+
-//| Handles:                                                         |
+//| Handles                                                          |
 //+------------------------------------------------------------------+
 int ATR_Channel_Handle{};
-
+int Vortex_Handle;
 //+------------------------------------------------------------------+
-//| Other Globals:                                                   |
+//| Global Variables                                                 |
 //+------------------------------------------------------------------+
 int Bar_Total{};
 ulong Ticket_Number{};
 bool In_Trade = false;
+//+------------------------------------------------------------------+
+//| Objects                                                          |
+//+------------------------------------------------------------------+
 CTrade trade;
 //+------------------------------------------------------------------+
-//| Expert Initialization Function:                                  |
+//| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit(){
    
    Bar_Total = iBars(_Symbol,input_timeframe);
    ATR_Channel_Handle = iCustom(_Symbol,input_timeframe,"ATR Channel.ex5",MODE_SMA,1,input_atr_period,input_atr_channel_factor,input_atr_channel_ap);
-   
+   Vortex_Handle = iCustom(_Symbol,input_timeframe,"Vortex 2.ex5",input_vortex_period);
    
    return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
-//| Expert Deinitialization Function:                                |
+//| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason){}
 //+------------------------------------------------------------------+
-//| Expert Tick Function:                                            |
+//| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick(){
    int bar_total_current = iBars(_Symbol,input_timeframe);
@@ -73,21 +78,29 @@ void OnTick(){
    }  
 }
 //+------------------------------------------------------------------+
-//| Look For Signal Function:                                        |
+//| Trade Signal Function:                                           |
 //+------------------------------------------------------------------+
-//| - PositionCheckModify will close a position if it receives:      |
-//|   - NO_SIGNAL                                                    |
-//|   - An opposite signal to the current open position              |
+//| - Simple 2 lines cross                                           |
+//| - plus line value at buffer 2, minus line value at buffer 4      |
 //+------------------------------------------------------------------+
 TRADING_TERMS LookForSignal(){
+   double plus_values[], minus_values[];
+   CopyBuffer(Vortex_Handle,2,1,2,plus_values);
+   CopyBuffer(Vortex_Handle,4,1,2,minus_values);
+   ArrayReverse(plus_values);
+   ArrayReverse(minus_values);
    
+   if (plus_values[0] > minus_values[0] && plus_values[1] < minus_values[1]) return BUY_SIGNAL;
+   if (plus_values[0] > minus_values[0]) return BULLISH;
+   if (plus_values[0] < minus_values[0] && plus_values[1] > minus_values[1]) return SELL_SIGNAL;
+   if (plus_values[0] < minus_values[0]) return BEARISH;
+   
+   else PrintFormat("Error: No signal when calling function %s",__FUNCTION__);
    return NO_SIGNAL;
 }
+
 //+------------------------------------------------------------------+
-//| Lot Size Calculation Function:                                   |
-//+------------------------------------------------------------------+
-//| - Calculates lot sized based on percentage of account size       |
-//| - Stop loss distance is calculated in the EnterPosition function |
+//| Lot Size Calculation Function                                    |
 //+------------------------------------------------------------------+
 double CalculateLotSize(double Risk_Percent, double Stop_Distance){
    
@@ -113,10 +126,7 @@ double CalculateLotSize(double Risk_Percent, double Stop_Distance){
 }
 
 //+------------------------------------------------------------------+
-//| Enter Position Function:                                         |
-//+------------------------------------------------------------------+
-//| - Uses ATR Channel for stop loss placement                       |
-//| - The channel distance is placed at ATR * ATR_Channel_Factor     |
+//| Enter Position Function                                          |
 //+------------------------------------------------------------------+
 void EnterPosition(TRADING_TERMS entry_type){
    
@@ -157,10 +167,9 @@ void EnterPosition(TRADING_TERMS entry_type){
       }
    }
 }
+
 //+------------------------------------------------------------------+
-//| Position Check/Modify Function:                                  |
-//+------------------------------------------------------------------+
-//| - Gets called every time there's a new bar                       |
+//| Position Check/Modify function                                   |
 //+------------------------------------------------------------------+
 void PositionCheckModify(TRADING_TERMS Trade_Signal){
    

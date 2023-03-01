@@ -1,6 +1,6 @@
 #include <Trade/Trade.mqh>
 //+------------------------------------------------------------------+
-//| Custom Enums:                                                    |
+//| Custom Enums                                                     |
 //+------------------------------------------------------------------+
 enum TRADING_TERMS {
    BUY_SIGNAL,
@@ -12,8 +12,7 @@ enum TRADING_TERMS {
    GO_SHORT
 };
 //+------------------------------------------------------------------+
-//| Class CSingleIndicatorTester:                                    |
-//+------------------------------------------------------------------+
+//| Class CSingleIndicatorTester                                     |
 //| - For Testing Confirmation Indicators                            |
 //+------------------------------------------------------------------+
 class CSingleIndicatorTester : public CObject {
@@ -28,11 +27,14 @@ private:
    double ATR_Channel_Factor;
    double ATR_Channel_Applied_Price;
    
-   // <<< Put Indicator Inputs Here >>>
+   int ATrend_Period;
+   ENUM_MA_METHOD ATrend_Method;
+   ENUM_APPLIED_PRICE ATrend_App_Price;
+   double ATrend_Acceleration;
 
 // Indicator Handles:
    int ATR_Channel_Handle;
-   
+   int ATrend_Handle;
 // Other Declarations:
    int Bar_Total;
    ulong Ticket_Number;
@@ -53,7 +55,11 @@ public:
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price); // Add Indicator Inputs
+                                               double atr_channel_applied_price,
+                                               int atrend_period,
+                                               ENUM_MA_METHOD atrend_method,
+                                               ENUM_APPLIED_PRICE atrend_app_price,
+                                               double atrend_acceleration);
                         ~CSingleIndicatorTester(void);
    int                  OnInitEvent(void);
    void                 OnDeinitEvent(const int reason);
@@ -61,9 +67,7 @@ public:
 
 };
 //+------------------------------------------------------------------+
-//| Constructor:                                                     |
-//+------------------------------------------------------------------+
-//| - Initialize inputs                                              |
+//| Constructor                                                      |
 //+------------------------------------------------------------------+
 CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                ENUM_TIMEFRAMES timeframe,
@@ -71,7 +75,11 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price){ // Add Indicator Inputs
+                                               double atr_channel_applied_price,
+                                               int atrend_period,
+                                               ENUM_MA_METHOD atrend_method,
+                                               ENUM_APPLIED_PRICE atrend_app_price,
+                                               double atrend_acceleration){
    // Initialize Inputs
    Pair = pair;
    Timeframe = timeframe;
@@ -82,7 +90,10 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    ATR_Channel_Factor = atr_channel_factor;
    ATR_Channel_Applied_Price = atr_channel_applied_price;
    
-   // <<< Add Indicator Inputs>>>
+   ATrend_Period = atrend_period;
+   ATrend_Method = atrend_method;
+   ATrend_App_Price = atrend_app_price;
+   ATrend_Acceleration = atrend_acceleration;
    
    // Other Variable Initialization
    Bar_Total = 0;
@@ -90,27 +101,27 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    In_Trade = false;   
 }
 //+------------------------------------------------------------------+
-//| Destructor:                                                      |
+//| Destructor                                                       |
 //+------------------------------------------------------------------+
 CSingleIndicatorTester::~CSingleIndicatorTester(void){
 }
 //+------------------------------------------------------------------+
-//| OnInit Event Function:                                           |
+//| OnInit Event Function                                            |
 //+------------------------------------------------------------------+
 int CSingleIndicatorTester::OnInitEvent(void){
    
    Bar_Total = iBars(Pair,Timeframe);
    ATR_Channel_Handle = iCustom(Pair,Timeframe,"ATR Channel.ex5",MODE_SMA,1,ATR_Period,ATR_Channel_Factor,ATR_Channel_Applied_Price);
-   
+   ATrend_Handle = iCustom(Pair,Timeframe,"Average trend.ex5",ATrend_Period,ATrend_Method,ATrend_App_Price,ATrend_Acceleration);
    
    return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
-//| OnDeinit Event Function:                                         |
+//| OnDeinit Event Function                                          |
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::OnDeinitEvent(const int reason){}
 //+------------------------------------------------------------------+
-//| OnTick Event Function:                                           |
+//| OnTick Event Function                                            |
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::OnTickEvent(void){
    
@@ -132,18 +143,32 @@ void CSingleIndicatorTester::OnTickEvent(void){
 //| Look For Signal Function:                                        |
 //+------------------------------------------------------------------+
 //| - PositionCheckModify will close a position if it receives:      |
-//|   - NO_SIGNAL                                                    |
-//|   - An opposite signal to the current open position              |
+//|  - NO_SIGNAL                                                     |
+//|  - An opposite signal to the current open position               |
 //+------------------------------------------------------------------+
 TRADING_TERMS CSingleIndicatorTester::LookForSignal(void){
    
+   double colour_value[];
+   CopyBuffer(ATrend_Handle,1,1,2,colour_value);
+   ArrayReverse(colour_value);
+   
+   if (colour_value[0] == 0) return NO_SIGNAL;
+   
+   if (colour_value[0] == 1){
+      if (colour_value[1] == 2) return BUY_SIGNAL;
+      else return BULLISH;
+   }
+   if (colour_value[0] == 2){
+      if (colour_value[1] == 1) return SELL_SIGNAL;
+      else return BEARISH; 
+   }
    return NO_SIGNAL;
 }
 //+------------------------------------------------------------------+
 //| Lot Size Calculation Function:                                   |
 //+------------------------------------------------------------------+
-//| - Calculates lot sized based on percentage of account size       |
-//| - Stop loss distance is calculated in the EnterPosition function |
+//| - Calculates lot sized based on percentage of account size.      |
+//| - Stop loss distance is calculated in the EnterPosition function.|
 //+------------------------------------------------------------------+
 double CSingleIndicatorTester::CalculateLotSize(double risk_input,double stop_distance){
    
@@ -216,7 +241,7 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
 //+------------------------------------------------------------------+
 //| Position Check/Modify Function                                   |
 //+------------------------------------------------------------------+
-//|- Gets called every time there's a new bar                        |
+//|- Gets called every time there's a new bar.                       |
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::PositionCheckModify(TRADING_TERMS trade_signal){
    

@@ -1,7 +1,7 @@
-#include "Class Template.mqh"
+#include "Vortex 2 Test Class.mqh"
 #include <Arrays/ArrayObj.mqh>
 //+------------------------------------------------------------------+
-//| Inputs:                                                          |
+//| Inputs                                                           |
 //+------------------------------------------------------------------+
 input group "Use Current or Different Timeframe:"
 input string input_pairs = "EURUSD,USDJPY,GBPUSD,USDCHF,USDCAD,AUDUSD,GBPJPY,NZDUSD,EURGBP,EURJPY"; // Input forex pairs only, seperated by commas and with no spaces.
@@ -14,13 +14,15 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_applied_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
+input group "Vortex 2 Input:"
+input int input_vortex_period = 32; // Vortex period
 //+------------------------------------------------------------------+
-//| Globals:                                                         |
+//| Globals                                                          |
 //+------------------------------------------------------------------+
 CArrayObj strategy_array;
 string pair_array[];
 //+------------------------------------------------------------------+
-//| Expert Initialization Function:                                  |
+//| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit(){
    // Validate String Input:
@@ -45,7 +47,8 @@ int OnInit(){
                                                     input_profit_factor,
                                                     input_atr_period,
                                                     input_atr_channel_factor,
-                                                    input_atr_channel_applied_price));
+                                                    input_atr_channel_applied_price,
+                                                    input_vortex_period));
    }
    
    // Run OnInit Event:
@@ -56,7 +59,7 @@ int OnInit(){
    return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
-//| Expert Deinitialization Function:                                |
+//| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason){
    for (int pos = 0; pos < strategy_array.Total(); pos++){
@@ -65,7 +68,7 @@ void OnDeinit(const int reason){
    }
 }
 //+------------------------------------------------------------------+
-//| Expert Tick Function:                                            |
+//| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick(){
    for (int pos = 0; pos < strategy_array.Total(); pos++){

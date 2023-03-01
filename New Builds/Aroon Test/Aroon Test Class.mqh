@@ -1,6 +1,6 @@
 #include <Trade/Trade.mqh>
 //+------------------------------------------------------------------+
-//| Custom Enums:                                                    |
+//| Custom Enums                                                     |
 //+------------------------------------------------------------------+
 enum TRADING_TERMS {
    BUY_SIGNAL,
@@ -11,9 +11,12 @@ enum TRADING_TERMS {
    GO_LONG,
    GO_SHORT
 };
+enum AROON_METHOD {
+   ON_CROSS, // On Line Cross
+   ON_CROSS_AND_MAX // Line Cross + Wait for Max
+};
 //+------------------------------------------------------------------+
-//| Class CSingleIndicatorTester:                                    |
-//+------------------------------------------------------------------+
+//| Class CSingleIndicatorTester                                     |
 //| - For Testing Confirmation Indicators                            |
 //+------------------------------------------------------------------+
 class CSingleIndicatorTester : public CObject {
@@ -21,6 +24,7 @@ private:
 // Input Parameters:
    string Pair;
    ENUM_TIMEFRAMES Timeframe;
+   
    // Risk Inputs
    double Risk_Percent;
    double Profit_Factor;
@@ -28,19 +32,24 @@ private:
    double ATR_Channel_Factor;
    double ATR_Channel_Applied_Price;
    
-   // <<< Put Indicator Inputs Here >>>
+   // Aroon Inputs
+   int Aroon_Period;
+   int Aroon_Shift;
+   AROON_METHOD Aroon_Method;
+   int Aroon_Lookback;
 
 // Indicator Handles:
    int ATR_Channel_Handle;
+   int Aroon_Handle;
    
 // Other Declarations:
    int Bar_Total;
    ulong Ticket_Number;
    bool In_Trade;
    CTrade trade;
-   
+     
 // Private Function Declaration:
-   TRADING_TERMS        LookForSignal(void);
+   TRADING_TERMS        LookForSignal(AROON_METHOD Aroon_Method_Input);
    double               CalculateLotSize(double risk_input, double stop_distance);
    void                 EnterPosition(TRADING_TERMS entry_type);
    void                 PositionCheckModify(TRADING_TERMS trade_signal);
@@ -53,7 +62,11 @@ public:
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price); // Add Indicator Inputs
+                                               double atr_channel_applied_price,
+                                               int aroon_period,
+                                               int aroon_shift,
+                                               AROON_METHOD aroon_method,
+                                               int aroon_lookback);
                         ~CSingleIndicatorTester(void);
    int                  OnInitEvent(void);
    void                 OnDeinitEvent(const int reason);
@@ -61,9 +74,7 @@ public:
 
 };
 //+------------------------------------------------------------------+
-//| Constructor:                                                     |
-//+------------------------------------------------------------------+
-//| - Initialize inputs                                              |
+//| Constructor                                                      |
 //+------------------------------------------------------------------+
 CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                ENUM_TIMEFRAMES timeframe,
@@ -71,7 +82,11 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price){ // Add Indicator Inputs
+                                               double atr_channel_applied_price,
+                                               int aroon_period,
+                                               int aroon_shift,
+                                               AROON_METHOD aroon_method,
+                                               int aroon_lookback){
    // Initialize Inputs
    Pair = pair;
    Timeframe = timeframe;
@@ -82,7 +97,10 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    ATR_Channel_Factor = atr_channel_factor;
    ATR_Channel_Applied_Price = atr_channel_applied_price;
    
-   // <<< Add Indicator Inputs>>>
+   Aroon_Period = aroon_period;
+   Aroon_Shift = aroon_shift;
+   Aroon_Method = aroon_method;
+   Aroon_Lookback = aroon_lookback;
    
    // Other Variable Initialization
    Bar_Total = 0;
@@ -90,27 +108,27 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    In_Trade = false;   
 }
 //+------------------------------------------------------------------+
-//| Destructor:                                                      |
+//| Destructor                                                       |
 //+------------------------------------------------------------------+
 CSingleIndicatorTester::~CSingleIndicatorTester(void){
 }
 //+------------------------------------------------------------------+
-//| OnInit Event Function:                                           |
+//| OnInit Event Function                                            |
 //+------------------------------------------------------------------+
 int CSingleIndicatorTester::OnInitEvent(void){
    
    Bar_Total = iBars(Pair,Timeframe);
    ATR_Channel_Handle = iCustom(Pair,Timeframe,"ATR Channel.ex5",MODE_SMA,1,ATR_Period,ATR_Channel_Factor,ATR_Channel_Applied_Price);
-   
+   Aroon_Handle = iCustom(Pair,Timeframe,"aroon.ex5",Aroon_Period,Aroon_Shift);
    
    return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
-//| OnDeinit Event Function:                                         |
+//| OnDeinit Event Function                                          |
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::OnDeinitEvent(const int reason){}
 //+------------------------------------------------------------------+
-//| OnTick Event Function:                                           |
+//| OnTick Event Function                                            |
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::OnTickEvent(void){
    
@@ -119,7 +137,7 @@ void CSingleIndicatorTester::OnTickEvent(void){
    if (Bar_Total != Bar_Total_Current){
       Bar_Total = Bar_Total_Current;
       
-      TRADING_TERMS trade_signal = LookForSignal();
+      TRADING_TERMS trade_signal = LookForSignal(Aroon_Method);
       PositionCheckModify(trade_signal);
       
       if (!In_Trade){
@@ -129,21 +147,47 @@ void CSingleIndicatorTester::OnTickEvent(void){
    }   
 }
 //+------------------------------------------------------------------+
-//| Look For Signal Function:                                        |
+//| Look For Signal Function                                         |
 //+------------------------------------------------------------------+
-//| - PositionCheckModify will close a position if it receives:      |
-//|   - NO_SIGNAL                                                    |
-//|   - An opposite signal to the current open position              |
-//+------------------------------------------------------------------+
-TRADING_TERMS CSingleIndicatorTester::LookForSignal(void){
+TRADING_TERMS CSingleIndicatorTester::LookForSignal(AROON_METHOD Aroon_Method_Input){
+   double green_line_values[],red_line_values[];
+   CopyBuffer(Aroon_Handle,0,1,Aroon_Lookback + 2,green_line_values);
+   CopyBuffer(Aroon_Handle,1,1,Aroon_Lookback + 2,red_line_values);
+   ArrayReverse(green_line_values);
+   ArrayReverse(red_line_values);
    
+   if (green_line_values[0] == red_line_values[0]) return NO_SIGNAL;
+   
+   if (Aroon_Method_Input == ON_CROSS){
+      
+      if (green_line_values[0] > red_line_values[0] && green_line_values[1] <= red_line_values[1]) return BUY_SIGNAL;
+      if (green_line_values[0] > red_line_values[0]) return BULLISH;
+      if (green_line_values[0] < red_line_values[0] && green_line_values[1] >= red_line_values[1]) return SELL_SIGNAL;
+      if (green_line_values[0] < red_line_values[0]) return BEARISH;
+   }
+   
+   if (Aroon_Method_Input == ON_CROSS_AND_MAX){
+      
+      if (green_line_values[0] > 93 && green_line_values[0] > red_line_values[0]){
+         for (int pos = 1; pos < ArraySize(green_line_values); pos++){
+            if (green_line_values[pos] > 93 && green_line_values[pos] > red_line_values[pos]) return BULLISH;
+            if (green_line_values[pos] <= red_line_values[pos]) return BUY_SIGNAL;
+         }
+      }
+      if (green_line_values[0] > red_line_values[0]) return BULLISH;
+      
+      if (red_line_values[0] > 93 && red_line_values[0] > green_line_values[0]){
+         for (int pos = 1; pos < ArraySize(red_line_values); pos++){
+            if (red_line_values[pos] > 93 && red_line_values[pos] > green_line_values[pos]) return BEARISH;
+            if (red_line_values[pos] <= green_line_values[pos]) return SELL_SIGNAL;
+         }
+      }
+      if (red_line_values[0] > green_line_values[0]) return BEARISH;
+   }
    return NO_SIGNAL;
 }
 //+------------------------------------------------------------------+
-//| Lot Size Calculation Function:                                   |
-//+------------------------------------------------------------------+
-//| - Calculates lot sized based on percentage of account size       |
-//| - Stop loss distance is calculated in the EnterPosition function |
+//| Lot Size Calculation Function                                    |
 //+------------------------------------------------------------------+
 double CSingleIndicatorTester::CalculateLotSize(double risk_input,double stop_distance){
    
@@ -155,23 +199,18 @@ double CSingleIndicatorTester::CalculateLotSize(double risk_input,double stop_di
       Print("Error: Lot size could not be calculated");
       return 0;
    }
-   
    double risk_money = AccountInfoDouble(ACCOUNT_BALANCE) * risk_input / 100;
    double money_lot_step = (stop_distance / tick_size) * tick_value * lot_step;
    
    if (money_lot_step == 0){
       Print("Lot Size could not be calculated.");
       return 0;
-   }
-   
+   } 
    double lots = MathFloor(risk_money / money_lot_step) * lot_step;
    return lots;
 }
 //+------------------------------------------------------------------+
-//| Enter Position Function:                                         |
-//+------------------------------------------------------------------+
-//| - Uses ATR Channel for stop loss placement                       |
-//| - The channel distance is placed at ATR * ATR_Channel_Factor     |
+//| Enter Position Function                                          |
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
    
@@ -216,23 +255,22 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
 //+------------------------------------------------------------------+
 //| Position Check/Modify Function                                   |
 //+------------------------------------------------------------------+
-//|- Gets called every time there's a new bar                        |
-//+------------------------------------------------------------------+
 void CSingleIndicatorTester::PositionCheckModify(TRADING_TERMS trade_signal){
    
    if (In_Trade){
       if (PositionSelectByTicket(Ticket_Number)){
       
          if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
-            if (trade_signal == SELL_SIGNAL || trade_signal == BEARISH || trade_signal == NO_SIGNAL){
+            if (trade_signal == SELL_SIGNAL){
                if (trade.PositionClose(Ticket_Number)){
                   In_Trade = false;
                   Ticket_Number = NULL;
                }
             }
          }
+     
          if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
-            if (trade_signal == BUY_SIGNAL || trade_signal == BULLISH || trade_signal == NO_SIGNAL){
+            if (trade_signal == BUY_SIGNAL){
                if (trade.PositionClose(Ticket_Number)){
                   In_Trade = false;
                   Ticket_Number = NULL;

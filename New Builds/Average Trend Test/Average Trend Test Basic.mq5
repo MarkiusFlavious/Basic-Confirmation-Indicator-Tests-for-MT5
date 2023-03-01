@@ -1,9 +1,9 @@
 //+------------------------------------------------------------------+
-//| Includes:                                                        |
+//| Includes                                                         |
 //+------------------------------------------------------------------+
 #include <Trade/Trade.mqh>
 //+------------------------------------------------------------------+
-//| Custom Enums:                                                    |
+//| Custom Enums                                                     |
 //+------------------------------------------------------------------+
 enum TRADING_TERMS {
    BUY_SIGNAL,
@@ -15,7 +15,7 @@ enum TRADING_TERMS {
    GO_SHORT
 };
 //+------------------------------------------------------------------+
-//| Inputs:                                                          |
+//| Inputs                                                           |
 //+------------------------------------------------------------------+
 input group "Use Current or Different Timeframe:"
 input ENUM_TIMEFRAMES input_timeframe = PERIOD_CURRENT; // Timeframe
@@ -27,35 +27,45 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_ap = PRICE_TYPICAL; // ATR Channel Applied Price
 
-//+------------------------------------------------------------------+
-//| Handles:                                                         |
-//+------------------------------------------------------------------+
-int ATR_Channel_Handle{};
+input group "Average Trend Inputs:"
+input int input_atrend_period = 35; // Average Period
+input ENUM_MA_METHOD input_atrend_method = MODE_EMA;    // Average Method
+input ENUM_APPLIED_PRICE input_atrend_app_price = PRICE_CLOSE; // Applied Price
+input double input_atrend_acceleration = 1.05; // Acceleration factor
 
 //+------------------------------------------------------------------+
-//| Other Globals:                                                   |
+//| Handles                                                          |
+//+------------------------------------------------------------------+
+int ATR_Channel_Handle{};
+int ATrend_Handle{}; 
+//+------------------------------------------------------------------+
+//| Global Variables                                                 |
 //+------------------------------------------------------------------+
 int Bar_Total{};
 ulong Ticket_Number{};
 bool In_Trade = false;
+
+//+------------------------------------------------------------------+
+//| Objects                                                          |
+//+------------------------------------------------------------------+
 CTrade trade;
 //+------------------------------------------------------------------+
-//| Expert Initialization Function:                                  |
+//| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit(){
    
    Bar_Total = iBars(_Symbol,input_timeframe);
    ATR_Channel_Handle = iCustom(_Symbol,input_timeframe,"ATR Channel.ex5",MODE_SMA,1,input_atr_period,input_atr_channel_factor,input_atr_channel_ap);
-   
+   ATrend_Handle = iCustom(_Symbol,input_timeframe,"Average trend.ex5",input_atrend_period,input_atrend_method,input_atrend_app_price,input_atrend_acceleration);
    
    return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
-//| Expert Deinitialization Function:                                |
+//| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason){}
 //+------------------------------------------------------------------+
-//| Expert Tick Function:                                            |
+//| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick(){
    int bar_total_current = iBars(_Symbol,input_timeframe);
@@ -75,19 +85,31 @@ void OnTick(){
 //+------------------------------------------------------------------+
 //| Look For Signal Function:                                        |
 //+------------------------------------------------------------------+
-//| - PositionCheckModify will close a position if it receives:      |
-//|   - NO_SIGNAL                                                    |
-//|   - An opposite signal to the current open position              |
+//| - Colour changing line with colour values at buffer 1.           |
+//| - Blue == 1, Orange == 2, Gray == 0                              |
+//| - The line appears to only switch between blue and orange.       |
 //+------------------------------------------------------------------+
 TRADING_TERMS LookForSignal(){
    
+   double colour_value[];
+   CopyBuffer(ATrend_Handle,1,1,2,colour_value);
+   ArrayReverse(colour_value);
+   
+   if (colour_value[0] == 0) return NO_SIGNAL;
+   
+   if (colour_value[0] == 1){
+      if (colour_value[1] == 2) return BUY_SIGNAL;
+      else return BULLISH;
+   }
+   if (colour_value[0] == 2){
+      if (colour_value[1] == 1) return SELL_SIGNAL;
+      else return BEARISH; 
+   }
    return NO_SIGNAL;
 }
+
 //+------------------------------------------------------------------+
-//| Lot Size Calculation Function:                                   |
-//+------------------------------------------------------------------+
-//| - Calculates lot sized based on percentage of account size       |
-//| - Stop loss distance is calculated in the EnterPosition function |
+//| Lot Size Calculation Function                                    |
 //+------------------------------------------------------------------+
 double CalculateLotSize(double Risk_Percent, double Stop_Distance){
    
@@ -113,10 +135,7 @@ double CalculateLotSize(double Risk_Percent, double Stop_Distance){
 }
 
 //+------------------------------------------------------------------+
-//| Enter Position Function:                                         |
-//+------------------------------------------------------------------+
-//| - Uses ATR Channel for stop loss placement                       |
-//| - The channel distance is placed at ATR * ATR_Channel_Factor     |
+//| Enter Position Function                                          |
 //+------------------------------------------------------------------+
 void EnterPosition(TRADING_TERMS entry_type){
    
@@ -157,10 +176,9 @@ void EnterPosition(TRADING_TERMS entry_type){
       }
    }
 }
+
 //+------------------------------------------------------------------+
-//| Position Check/Modify Function:                                  |
-//+------------------------------------------------------------------+
-//| - Gets called every time there's a new bar                       |
+//| Position Check/Modify function                                   |
 //+------------------------------------------------------------------+
 void PositionCheckModify(TRADING_TERMS Trade_Signal){
    
