@@ -236,8 +236,7 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
          }
       }
    }
-   
-   if (entry_type == GO_SHORT){
+   else if (entry_type == GO_SHORT){
       double stop_distance = atr_channel_upper[0] - bid_price;
       double profit_distance = stop_distance * Profit_Factor;
       double stop_price = NormalizeDouble(atr_channel_upper[0],digits);
@@ -269,7 +268,7 @@ void CSingleIndicatorTester::PositionCheckModify(TRADING_TERMS trade_signal){
             }
          }
      
-         if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+         else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
             if (trade_signal == BUY_SIGNAL){
                if (trade.PositionClose(Ticket_Number)){
                   In_Trade = false;

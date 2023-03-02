@@ -82,7 +82,7 @@ void OnTick(){
     
       if (In_Trade == false){
          if (trade_signal == BUY_SIGNAL) EnterPosition(GO_LONG);
-         if (trade_signal == SELL_SIGNAL) EnterPosition(GO_SHORT);
+         else if (trade_signal == SELL_SIGNAL) EnterPosition(GO_SHORT);
       }
    }  
 }
@@ -106,31 +106,31 @@ TRADING_TERMS LookForSignal(AROON_METHOD Aroon_Method){
    
    if (green_line_values[0] == red_line_values[0]) return NO_SIGNAL;
    
-   if (Aroon_Method == ON_CROSS){
+   else if (Aroon_Method == ON_CROSS){
       
       if (green_line_values[0] > red_line_values[0] && green_line_values[1] <= red_line_values[1]) return BUY_SIGNAL;
-      if (green_line_values[0] > red_line_values[0]) return BULLISH;
-      if (green_line_values[0] < red_line_values[0] && green_line_values[1] >= red_line_values[1]) return SELL_SIGNAL;
-      if (green_line_values[0] < red_line_values[0]) return BEARISH;
+      else if (green_line_values[0] > red_line_values[0]) return BULLISH;
+      else if (green_line_values[0] < red_line_values[0] && green_line_values[1] >= red_line_values[1]) return SELL_SIGNAL;
+      else if (green_line_values[0] < red_line_values[0]) return BEARISH;
    }
    
-   if (Aroon_Method == ON_CROSS_AND_MAX){
+   else if (Aroon_Method == ON_CROSS_AND_MAX){
       
       if (green_line_values[0] > 93 && green_line_values[0] > red_line_values[0]){
          for (int pos = 1; pos < ArraySize(green_line_values); pos++){
             if (green_line_values[pos] > 93 && green_line_values[pos] > red_line_values[pos]) return BULLISH;
-            if (green_line_values[pos] <= red_line_values[pos]) return BUY_SIGNAL;
+            else if (green_line_values[pos] <= red_line_values[pos]) return BUY_SIGNAL;
          }
       }
-      if (green_line_values[0] > red_line_values[0]) return BULLISH;
+      else if (green_line_values[0] > red_line_values[0]) return BULLISH;
       
-      if (red_line_values[0] > 93 && red_line_values[0] > green_line_values[0]){
+      else if (red_line_values[0] > 93 && red_line_values[0] > green_line_values[0]){
          for (int pos = 1; pos < ArraySize(red_line_values); pos++){
             if (red_line_values[pos] > 93 && red_line_values[pos] > green_line_values[pos]) return BEARISH;
-            if (red_line_values[pos] <= green_line_values[pos]) return SELL_SIGNAL;
+            else if (red_line_values[pos] <= green_line_values[pos]) return SELL_SIGNAL;
          }
       }
-      if (red_line_values[0] > green_line_values[0]) return BEARISH;
+      else if (red_line_values[0] > green_line_values[0]) return BEARISH;
    }
    return NO_SIGNAL;
 }
@@ -187,8 +187,7 @@ void EnterPosition(TRADING_TERMS Entry_Type){
          }
       }
    }
-   
-   if (Entry_Type == GO_SHORT){
+   else if (Entry_Type == GO_SHORT){
       double stop_distance = atr_channel_upper[0] - bid_price;
       double profit_distance = stop_distance * input_profit_factor;
       double stop_price = NormalizeDouble(atr_channel_upper[0],_Digits);
@@ -222,7 +221,7 @@ void PositionCheckModify(TRADING_TERMS Trade_Signal){
                }
             }
          }
-         if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+         else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
             if (Trade_Signal == BUY_SIGNAL || Trade_Signal == BULLISH || Trade_Signal == NO_SIGNAL){
                if (trade.PositionClose(Ticket_Number)){
                   In_Trade = false;

@@ -32,7 +32,7 @@ int OnInit(){
          Print("Error: Invalid Symbol Input Structure");
          return (INIT_FAILED);
       }
-      if (SymbolInfoInteger(pair_array[pos],SYMBOL_SECTOR) != SECTOR_CURRENCY){
+      else if (SymbolInfoInteger(pair_array[pos],SYMBOL_SECTOR) != SECTOR_CURRENCY){
          PrintFormat("Error: %s is not a valid Forex Symbol", pair_array[pos]);
          return (INIT_FAILED);
       }

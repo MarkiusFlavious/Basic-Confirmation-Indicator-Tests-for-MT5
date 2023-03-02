@@ -91,9 +91,9 @@ TRADING_TERMS LookForSignal(){
    ArrayReverse(minus_values);
    
    if (plus_values[0] > minus_values[0] && plus_values[1] < minus_values[1]) return BUY_SIGNAL;
-   if (plus_values[0] > minus_values[0]) return BULLISH;
-   if (plus_values[0] < minus_values[0] && plus_values[1] > minus_values[1]) return SELL_SIGNAL;
-   if (plus_values[0] < minus_values[0]) return BEARISH;
+   else if (plus_values[0] > minus_values[0]) return BULLISH;
+   else if (plus_values[0] < minus_values[0] && plus_values[1] > minus_values[1]) return SELL_SIGNAL;
+   else if (plus_values[0] < minus_values[0]) return BEARISH;
    
    else PrintFormat("Error: No signal when calling function %s",__FUNCTION__);
    return NO_SIGNAL;
@@ -151,8 +151,7 @@ void EnterPosition(TRADING_TERMS entry_type){
          }
       }
    }
-   
-   if (entry_type == GO_SHORT){
+   else if (entry_type == GO_SHORT){
       double stop_distance = atr_channel_upper[0] - bid_price;
       double profit_distance = stop_distance * input_profit_factor;
       double stop_price = NormalizeDouble(atr_channel_upper[0],_Digits);
@@ -184,7 +183,7 @@ void PositionCheckModify(TRADING_TERMS Trade_Signal){
                }
             }
          }
-         if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+         else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
             if (Trade_Signal == BUY_SIGNAL || Trade_Signal == BULLISH || Trade_Signal == NO_SIGNAL){
                if (trade.PositionClose(Ticket_Number)){
                   In_Trade = false;
