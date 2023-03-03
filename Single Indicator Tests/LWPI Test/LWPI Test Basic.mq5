@@ -20,16 +20,6 @@ input uint input_lwpi_period = 8; // LWPI Period
 //+------------------------------------------------------------------+
 //|Globals:                                                          |
 //+------------------------------------------------------------------+
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-int Bar_Total{};
-ulong Ticket_Number{};
-bool In_Trade = false;
-CTrade trade;
->>>>>>> main
->>>>>>> refs/remotes/origin/main
 CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_timeframe,
                                        input_risk_percent,
