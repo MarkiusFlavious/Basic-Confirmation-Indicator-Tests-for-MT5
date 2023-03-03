@@ -16,8 +16,17 @@ input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
 //+------------------------------------------------------------------+
+<<<<<<< HEAD
 //|Global:                                                           |
 //+------------------------------------------------------------------+
+=======
+//|Globals:                                                          |
+//+------------------------------------------------------------------+
+int Bar_Total{};
+ulong Ticket_Number{};
+bool In_Trade = false;
+CTrade trade;
+>>>>>>> main
 CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_timeframe,
                                        input_risk_percent,
