@@ -18,10 +18,13 @@ input int input_ssl_period = 10; // SSL Period
 //+------------------------------------------------------------------+
 //|Globals:                                                          |
 //+------------------------------------------------------------------+
+<<<<<<< HEAD
+=======
 int Bar_Total{};
 ulong Ticket_Number{};
 bool In_Trade = false;
 CTrade trade;
+>>>>>>> main
 CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_timeframe,
                                        input_risk_percent,
