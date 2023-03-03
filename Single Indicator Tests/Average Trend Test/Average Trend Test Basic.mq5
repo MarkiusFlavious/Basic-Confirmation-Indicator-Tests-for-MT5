@@ -23,10 +23,6 @@ input double input_atrend_acceleration = 1.05; // Acceleration factor
 //+------------------------------------------------------------------+
 //|Globals:                                                          |
 //+------------------------------------------------------------------+
-int Bar_Total{};
-ulong Ticket_Number{};
-bool In_Trade = false;
-CTrade trade;
 CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_timeframe,
                                        input_risk_percent,
