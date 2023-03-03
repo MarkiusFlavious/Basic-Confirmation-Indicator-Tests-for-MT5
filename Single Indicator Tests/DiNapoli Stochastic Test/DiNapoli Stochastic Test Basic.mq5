@@ -22,6 +22,16 @@ input uint input_slowD_period = 10; // Slow %D Period
 //+------------------------------------------------------------------+
 //|Globals:                                                          |
 //+------------------------------------------------------------------+
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+int Bar_Total{};
+ulong Ticket_Number{};
+bool In_Trade = false;
+CTrade trade;
+>>>>>>> main
+>>>>>>> refs/remotes/origin/main
 CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_timeframe,
                                        input_risk_percent,

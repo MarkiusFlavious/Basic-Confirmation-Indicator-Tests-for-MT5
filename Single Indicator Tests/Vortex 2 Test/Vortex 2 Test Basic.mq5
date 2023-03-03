@@ -20,6 +20,16 @@ input int input_vortex_period = 32; // Vortex period
 //+------------------------------------------------------------------+
 //|Globals:                                                          |
 //+------------------------------------------------------------------+
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+int Bar_Total{};
+ulong Ticket_Number{};
+bool In_Trade = false;
+CTrade trade;
+>>>>>>> main
+>>>>>>> refs/remotes/origin/main
 CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_timeframe,
                                        input_risk_percent,
