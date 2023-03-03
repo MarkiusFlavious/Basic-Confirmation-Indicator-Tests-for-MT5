@@ -20,13 +20,6 @@ input int  input_cor_angle_period = 35; // Period
 //+------------------------------------------------------------------+
 //|Globals:                                                          |
 //+------------------------------------------------------------------+
-<<<<<<< HEAD
-=======
-int Bar_Total{};
-ulong Ticket_Number{};
-bool In_Trade = false;
-CTrade trade;
->>>>>>> main
 CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_timeframe,
                                        input_risk_percent,
