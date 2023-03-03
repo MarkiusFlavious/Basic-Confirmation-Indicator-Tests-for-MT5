@@ -1,4 +1,4 @@
-#include "Class Template.mqh"
+#include "SSL Test Class.mqh"
 #include <Arrays/ArrayObj.mqh>
 //+------------------------------------------------------------------+
 //| Inputs:                                                          |
@@ -14,6 +14,9 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
+input group "SSL Inputs:"
+input ENUM_MA_METHOD input_ssl_ma_method = MODE_SMA;  // SSL MA Method
+input int input_ssl_period = 10; // SSL Period
 //+------------------------------------------------------------------+
 //| Globals:                                                         |
 //+------------------------------------------------------------------+
@@ -45,7 +48,9 @@ int OnInit(){
                                                     input_profit_factor,
                                                     input_atr_period,
                                                     input_atr_channel_factor,
-                                                    input_atr_channel_app_price));
+                                                    input_atr_channel_app_price,
+                                                    input_ssl_ma_method,
+                                                    input_ssl_period));
    }
    
    // Run OnInit Event:

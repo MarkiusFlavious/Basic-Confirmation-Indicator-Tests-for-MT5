@@ -26,7 +26,7 @@ private:
    double Profit_Factor;
    uint ATR_Period;
    double ATR_Channel_Factor;
-   double ATR_Channel_Applied_Price;
+   ENUM_APPLIED_PRICE ATR_Channel_Applied_Price;
    
    uint FastK_Period;
    uint SlowK_Period;
@@ -56,7 +56,7 @@ public:
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price,
+                                               ENUM_APPLIED_PRICE atr_channel_applied_price,
                                                uint fastK_period,
                                                uint slowK_period,
                                                uint slowD_period);
@@ -77,7 +77,7 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price,
+                                               ENUM_APPLIED_PRICE atr_channel_applied_price,
                                                uint fastK_period,
                                                uint slowK_period,
                                                uint slowD_period){

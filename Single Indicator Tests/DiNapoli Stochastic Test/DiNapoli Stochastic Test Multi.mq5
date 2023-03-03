@@ -3,18 +3,18 @@
 //+------------------------------------------------------------------+
 //| Inputs:                                                          |
 //+------------------------------------------------------------------+
-input group "Use Current or Different Timeframe:"
+input group "Currency Pairs and Timeframe Inputs:"
 input string input_pairs = "EURUSD,USDJPY,GBPUSD,USDCHF,USDCAD,AUDUSD,GBPJPY,NZDUSD,EURGBP,EURJPY"; // Input forex pairs only, seperated by commas and with no spaces.
 input ENUM_TIMEFRAMES input_timeframe = PERIOD_CURRENT; // Timeframe
 
-input group "Risk Inputs"
+input group "Risk Inputs:"
 input double input_risk_percent = 1.0; // Risk Percent Per Trade
 input double input_profit_factor = 1.5; // Profit factor
 input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_applied_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
-input group "DiNapoli Stochastic Inputs"
+input group "DiNapoli Stochastic Inputs:"
 input uint input_fastK_period = 20; // Fast %K Period
 input uint input_slowK_period = 2; // Slow %K Period
 input uint input_slowD_period = 10; // Slow %D Period

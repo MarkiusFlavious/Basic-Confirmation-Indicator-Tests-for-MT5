@@ -26,7 +26,7 @@ private:
    double Profit_Factor;
    uint ATR_Period;
    double ATR_Channel_Factor;
-   double ATR_Channel_Applied_Price;
+   ENUM_APPLIED_PRICE ATR_Channel_App_Price;
    
    // <<< Put Indicator Inputs Here >>>
 
@@ -53,7 +53,7 @@ public:
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price); // Add Indicator Inputs
+                                               ENUM_APPLIED_PRICE atr_channel_app_price); // Add Indicator Inputs
                         ~CSingleIndicatorTester(void);
    int                  OnInitEvent(void);
    void                 OnDeinitEvent(const int reason);
@@ -71,7 +71,7 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                double profit_factor,
                                                uint atr_period,
                                                double atr_channel_factor,
-                                               double atr_channel_applied_price){ // Add Indicator Inputs
+                                               ENUM_APPLIED_PRICE atr_channel_app_price){ // Add Indicator Inputs
    // Initialize Inputs
    Pair = pair;
    Timeframe = timeframe;
@@ -80,7 +80,7 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    Profit_Factor = profit_factor;
    ATR_Period = atr_period;
    ATR_Channel_Factor = atr_channel_factor;
-   ATR_Channel_Applied_Price = atr_channel_applied_price;
+   ATR_Channel_App_Price = atr_channel_app_price;
    
    // <<< Add Indicator Inputs>>>
    
@@ -100,7 +100,7 @@ CSingleIndicatorTester::~CSingleIndicatorTester(void){
 int CSingleIndicatorTester::OnInitEvent(void){
    
    Bar_Total = iBars(Pair,Timeframe);
-   ATR_Channel_Handle = iCustom(Pair,Timeframe,"ATR Channel.ex5",MODE_SMA,1,ATR_Period,ATR_Channel_Factor,ATR_Channel_Applied_Price);
+   ATR_Channel_Handle = iCustom(Pair,Timeframe,"ATR Channel.ex5",MODE_SMA,1,ATR_Period,ATR_Channel_Factor,ATR_Channel_App_Price);
    
    
    return(INIT_SUCCEEDED);

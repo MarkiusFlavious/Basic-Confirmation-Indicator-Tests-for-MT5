@@ -1,7 +1,4 @@
-//+------------------------------------------------------------------+
-//| Includes:                                                        |
-//+------------------------------------------------------------------+
-#include "LWPI Test Class.mqh"
+#include "SSL Test Class.mqh"
 //+------------------------------------------------------------------+
 //| Inputs:                                                          |
 //+------------------------------------------------------------------+
@@ -15,8 +12,9 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
-input group "LWPI Input:"
-input uint input_lwpi_period = 8; // LWPI Period
+input group "SSL Inputs:"
+input ENUM_MA_METHOD input_ssl_ma_method = MODE_SMA;  // SSL MA Method
+input int input_ssl_period = 10; // SSL Period
 //+------------------------------------------------------------------+
 //|Globals:                                                          |
 //+------------------------------------------------------------------+
@@ -31,7 +29,8 @@ CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_atr_period,
                                        input_atr_channel_factor,
                                        input_atr_channel_app_price,
-                                       input_lwpi_period);
+                                       input_ssl_ma_method,
+                                       input_ssl_period);
 //+------------------------------------------------------------------+
 //| Expert Initialization Function:                                  |
 //+------------------------------------------------------------------+
