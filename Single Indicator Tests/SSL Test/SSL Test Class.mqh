@@ -160,8 +160,8 @@ TRADING_TERMS CSingleIndicatorTester::LookForSignal(void){
       else return BULLISH;
    }
    else if (bulls_line[0] < bears_line[0]){
-      if (bulls_line[1] > bears_line[1]) return BUY_SIGNAL;
-      else return BULLISH;
+      if (bulls_line[1] > bears_line[1]) return SELL_SIGNAL;
+      else return BEARISH;
    }
    else PrintFormat("Unexpected error when calling the function: %s", __FUNCTION__);
    return NO_SIGNAL;
