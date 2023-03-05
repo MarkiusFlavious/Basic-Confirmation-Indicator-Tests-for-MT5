@@ -19,6 +19,7 @@ enum TRADING_METHOD {
 struct TradeStatus {
    TRADING_METHOD       Trade_Method;
    bool                 Move_Stop;
+   bool                 Trail_Stop;
    bool                 In_Trade;
    bool                 Modified;
    ulong                TicketA;
@@ -61,6 +62,7 @@ private:
    void                 EnterPosition(TRADING_TERMS entry_type, TRADING_METHOD mode);
    void                 PositionCheckModify(TRADING_TERMS trade_signal,TRADING_METHOD mode);
    void                 PositionCheckModify(TRADING_METHOD mode);
+   void                 TrailStop(bool trail_stop);
 
 public:
 // Public Function/Constructor/Destructor Declaration:
@@ -73,6 +75,7 @@ public:
                                                ENUM_APPLIED_PRICE atr_channel_app_price,
                                                TRADING_METHOD trade_method,
                                                bool move_stop,
+                                               bool trail_stop,
                                                ENUM_MA_METHOD ssl_ma_method,
                                                int ssl_period);
                         ~CSingleIndicatorTester(void);
@@ -95,6 +98,7 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                ENUM_APPLIED_PRICE atr_channel_app_price,
                                                TRADING_METHOD trade_method,
                                                bool move_stop,
+                                               bool trail_stop,
                                                ENUM_MA_METHOD ssl_ma_method,
                                                int ssl_period){
    // Initialize Inputs
@@ -109,6 +113,7 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    
    TradePosition.Trade_Method = trade_method;
    TradePosition.Move_Stop = move_stop;
+   TradePosition.Trail_Stop = trail_stop;
    
    SSL_MA_Method = ssl_ma_method;
    SSL_Period = ssl_period;
@@ -116,6 +121,10 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    // Other Variable Initialization
    Bar_Total = 0;
    TradePosition.In_Trade = false;
+   TradePosition.Modified = false;
+   TradePosition.TicketA = 0;
+   TradePosition.TicketB = 0;
+   TradePosition.Profit_Target = 0;
 }
 //+------------------------------------------------------------------+
 //| Destructor:                                                      |
@@ -338,11 +347,11 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type, TRADING_MET
 //+------------------------------------------------------------------+
 //| Position Check/Modify Function                                   |
 //+------------------------------------------------------------------+
-//|- Gets called every time there's a new bar                        |
+//|- Gets called every tick                                          |
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::PositionCheckModify(TRADING_METHOD mode){
    
-   if (TradePosition.In_Trade == true && TradePosition.Modified == false){
+   if (TradePosition.In_Trade && !TradePosition.Modified){
       
       double ask_price = SymbolInfoDouble(Pair,SYMBOL_ASK);
       double bid_price = SymbolInfoDouble(Pair,SYMBOL_BID);
@@ -402,6 +411,7 @@ void CSingleIndicatorTester::PositionCheckModify(TRADING_METHOD mode){
                      Print("Moved SL to break even");
                   }
                }
+               break;
             }
             else {
                TradePosition.TicketA = 0;
@@ -413,7 +423,11 @@ void CSingleIndicatorTester::PositionCheckModify(TRADING_METHOD mode){
       }
    }
 }
-
+//+------------------------------------------------------------------+
+//| Position Check/Modify Function                                   |
+//+------------------------------------------------------------------+
+//|- Gets called every time there's a new bar                        |
+//+------------------------------------------------------------------+
 void CSingleIndicatorTester::PositionCheckModify(TRADING_TERMS trade_signal,TRADING_METHOD mode){
    
    if (TradePosition.In_Trade){
@@ -498,6 +512,53 @@ void CSingleIndicatorTester::PositionCheckModify(TRADING_TERMS trade_signal,TRAD
                      TradePosition.TicketB = 0;
                      TradePosition.In_Trade = false;
                      TradePosition.Modified = false;
+                  }
+               }
+            }
+         }
+      }
+      TrailStop(TradePosition.Trail_Stop);
+   }
+}
+//+------------------------------------------------------------------+
+//| Trail Stop Function                                              |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::TrailStop(bool trail_stop){
+   if (trail_stop){
+      if (TradePosition.Modified){
+         double atr_upper[],atr_lower[];
+         CopyBuffer(ATR_Channel_Handle,1,1,1,atr_upper);
+         CopyBuffer(ATR_Channel_Handle,2,1,1,atr_lower);
+         int digits = (int)SymbolInfoInteger(Pair,SYMBOL_DIGITS);
+         
+         if (TradePosition.Trade_Method == CLOSE_PARTIAL){
+            if (PositionSelectByTicket(TradePosition.TicketA)){
+               if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
+                  double new_stop = NormalizeDouble(atr_lower[0],digits);
+                  if (new_stop > PositionGetDouble(POSITION_SL)){
+                     trade.PositionModify(TradePosition.TicketA,new_stop,0);
+                  }
+               }
+               else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+                  double new_stop = NormalizeDouble(atr_upper[0],digits);
+                  if (new_stop < PositionGetDouble(POSITION_SL)){
+                     trade.PositionModify(TradePosition.TicketA,new_stop,0);
+                  }
+               }
+            }
+         }
+         else if (TradePosition.Trade_Method == SPLIT_ORDER){
+            if (PositionSelectByTicket(TradePosition.TicketB)){
+               if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
+                  double new_stop = NormalizeDouble(atr_lower[0],digits);
+                  if (new_stop > PositionGetDouble(POSITION_SL)){
+                     trade.PositionModify(TradePosition.TicketB,new_stop,0);
+                  }
+               }
+               else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+                  double new_stop = NormalizeDouble(atr_upper[0],digits);
+                  if (new_stop < PositionGetDouble(POSITION_SL)){
+                     trade.PositionModify(TradePosition.TicketB,new_stop,0);
                   }
                }
             }
