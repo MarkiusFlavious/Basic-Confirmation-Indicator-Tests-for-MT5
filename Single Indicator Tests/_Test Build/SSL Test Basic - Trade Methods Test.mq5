@@ -14,6 +14,7 @@ input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Cha
 
 input group "Trade Order Inputs:"
 input TRADING_METHOD input_trade_method = SIMPLE; // Trade Order Method
+input bool input_move_stop = true; // Move stop to break even after reaching profit target
 
 input group "SSL Inputs:"
 input ENUM_MA_METHOD input_ssl_ma_method = MODE_SMA;  // SSL MA Method
@@ -29,6 +30,7 @@ CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_atr_channel_factor,
                                        input_atr_channel_app_price,
                                        input_trade_method,
+                                       input_move_stop,
                                        input_ssl_ma_method,
                                        input_ssl_period);
 //+------------------------------------------------------------------+

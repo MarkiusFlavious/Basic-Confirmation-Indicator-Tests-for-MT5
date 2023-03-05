@@ -18,6 +18,7 @@ enum TRADING_METHOD {
 };
 struct TradeStatus {
    TRADING_METHOD       Trade_Method;
+   bool                 Move_Stop;
    bool                 In_Trade;
    bool                 Modified;
    ulong                TicketA;
@@ -71,6 +72,7 @@ public:
                                                double atr_channel_factor,
                                                ENUM_APPLIED_PRICE atr_channel_app_price,
                                                TRADING_METHOD trade_method,
+                                               bool move_stop,
                                                ENUM_MA_METHOD ssl_ma_method,
                                                int ssl_period);
                         ~CSingleIndicatorTester(void);
@@ -92,6 +94,7 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                double atr_channel_factor,
                                                ENUM_APPLIED_PRICE atr_channel_app_price,
                                                TRADING_METHOD trade_method,
+                                               bool move_stop,
                                                ENUM_MA_METHOD ssl_ma_method,
                                                int ssl_period){
    // Initialize Inputs
@@ -105,6 +108,7 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    ATR_Channel_App_Price = atr_channel_app_price;
    
    TradePosition.Trade_Method = trade_method;
+   TradePosition.Move_Stop = move_stop;
    
    SSL_MA_Method = ssl_ma_method;
    SSL_Period = ssl_period;
@@ -358,7 +362,7 @@ void CSingleIndicatorTester::PositionCheckModify(TRADING_METHOD mode){
                      if (trade.PositionClosePartial(TradePosition.TicketA,close_volume)){
                         TradePosition.Modified = true;
                      }
-                     if (TradePosition.Modified = true){
+                     if (TradePosition.Move_Stop){
                         if (trade.PositionModify(TradePosition.TicketA,PositionGetDouble(POSITION_PRICE_OPEN),0)){
                            Print("Moved SL to break even");
                         }
@@ -370,7 +374,7 @@ void CSingleIndicatorTester::PositionCheckModify(TRADING_METHOD mode){
                      if (trade.PositionClosePartial(TradePosition.TicketA,close_volume)){
                         TradePosition.Modified = true;
                      }
-                     if (TradePosition.Modified = true){
+                     if (TradePosition.Move_Stop){
                         if (trade.PositionModify(TradePosition.TicketA,PositionGetDouble(POSITION_PRICE_OPEN),0)){
                            Print("Moved SL to break even");
                         }
@@ -391,9 +395,12 @@ void CSingleIndicatorTester::PositionCheckModify(TRADING_METHOD mode){
                break;
             }
             else if (PositionSelectByTicket(TradePosition.TicketB)){
-               if (trade.PositionModify(TradePosition.TicketB,PositionGetDouble(POSITION_PRICE_OPEN),0)){
-                  TradePosition.TicketA = 0;
-                  TradePosition.Modified = true;
+               TradePosition.Modified = true;
+               TradePosition.TicketA = 0;
+               if (TradePosition.Move_Stop){
+                  if (trade.PositionModify(TradePosition.TicketB,PositionGetDouble(POSITION_PRICE_OPEN),0)){
+                     Print("Moved SL to break even");
+                  }
                }
             }
             else {
