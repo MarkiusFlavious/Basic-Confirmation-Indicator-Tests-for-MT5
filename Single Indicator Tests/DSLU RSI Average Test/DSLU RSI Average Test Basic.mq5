@@ -15,6 +15,11 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
+input group "Trade Order Inputs:"
+input TRADING_METHOD input_trade_method = SIMPLE; // Trade Order Method
+input bool input_move_stop = true; // Move stop to break even after reaching profit target
+input bool input_trail_stop = false; // Trail Stop after reaching target profit
+
 input group "DSLU RSI of Average Inputs"
 input int input_rsi_period = 14; // RSI period
 input int input_ma_period = 32; // Average period (<= 1 for no average)
@@ -32,6 +37,9 @@ CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_atr_period,
                                        input_atr_channel_factor,
                                        input_atr_channel_app_price,
+                                       input_trade_method,
+                                       input_move_stop,
+                                       input_trail_stop,
                                        input_rsi_period,
                                        input_ma_period,
                                        input_ma_method,

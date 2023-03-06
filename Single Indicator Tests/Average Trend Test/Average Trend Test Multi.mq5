@@ -14,6 +14,11 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_applied_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
+input group "Trade Order Inputs:"
+input TRADING_METHOD input_trade_method = SIMPLE; // Trade Order Method
+input bool input_move_stop = true; // Move stop to break even after reaching profit target
+input bool input_trail_stop = false; // Trail Stop after reaching target profit
+
 input group "Average Trend Inputs:"
 input int input_atrend_period = 35; // Average Period
 input ENUM_MA_METHOD input_atrend_method = MODE_EMA;    // Average Method
@@ -51,6 +56,9 @@ int OnInit(){
                                                     input_atr_period,
                                                     input_atr_channel_factor,
                                                     input_atr_channel_applied_price,
+                                                    input_trade_method,
+                                                    input_move_stop,
+                                                    input_trail_stop,
                                                     input_atrend_period,
                                                     input_atrend_method,
                                                     input_atrend_app_price,

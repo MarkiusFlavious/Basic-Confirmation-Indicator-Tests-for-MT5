@@ -15,6 +15,11 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
+input group "Trade Order Inputs:"
+input TRADING_METHOD input_trade_method = SIMPLE; // Trade Order Method
+input bool input_move_stop = true; // Move stop to break even after reaching profit target
+input bool input_trail_stop = false; // Trail Stop after reaching target profit
+
 input group "Aroon Inputs"
 input int input_aroon_period = 9; // Aroon Period 
 input int input_aroon_shift = 0; // Aroon Horizontal Shift
@@ -30,6 +35,9 @@ CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_atr_period,
                                        input_atr_channel_factor,
                                        input_atr_channel_app_price,
+                                       input_trade_method,
+                                       input_move_stop,
+                                       input_trail_stop,
                                        input_aroon_period,
                                        input_aroon_shift,
                                        input_aroon_method,
