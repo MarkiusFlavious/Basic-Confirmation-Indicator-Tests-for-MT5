@@ -14,6 +14,11 @@ input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
 input ENUM_APPLIED_PRICE input_atr_channel_applied_price = PRICE_TYPICAL; // ATR Channel Applied Price
 
+input group "Trade Order Inputs:"
+input TRADING_METHOD input_trade_method = SIMPLE; // Trade Order Method
+input bool input_move_stop = true; // Move stop to break even after reaching profit target
+input bool input_trail_stop = false; // Trail Stop after reaching target profit
+
 input group "Bears Bulls Impulse Inputs"
 input uint input_bbi_period=  13; // Period
 input ENUM_APPLIED_PRICE input_bbi_applied_price =  PRICE_CLOSE; // Applied price
@@ -49,6 +54,9 @@ int OnInit(){
                                                     input_atr_period,
                                                     input_atr_channel_factor,
                                                     input_atr_channel_applied_price,
+                                                    input_trade_method,
+                                                    input_move_stop,
+                                                    input_trail_stop,
                                                     input_bbi_period,
                                                     input_bbi_applied_price));
    }

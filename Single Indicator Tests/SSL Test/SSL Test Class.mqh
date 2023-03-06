@@ -11,6 +11,21 @@ enum TRADING_TERMS {
    GO_LONG,
    GO_SHORT
 };
+enum TRADING_METHOD {
+   SIMPLE, // Cap Profits
+   SPLIT_ORDER, // Split Orders
+   CLOSE_PARTIAL // Use Partial Close
+};
+struct TradeStatus {
+   TRADING_METHOD       Trade_Method;
+   bool                 Move_Stop;
+   bool                 Trail_Stop;
+   bool                 In_Trade;
+   bool                 Modified;
+   ulong                TicketA;
+   ulong                TicketB;
+   double               Profit_Target;
+};
 //+------------------------------------------------------------------+
 //| Class CSingleIndicatorTester:                                    |
 //+------------------------------------------------------------------+
@@ -38,15 +53,20 @@ private:
    
 // Other Declarations:
    int Bar_Total;
-   ulong Ticket_Number;
-   bool In_Trade;
    CTrade trade;
+   TradeStatus TradePosition;
    
 // Private Function Declaration:
    TRADING_TERMS        LookForSignal(void);
    double               CalculateLotSize(double risk_input, double stop_distance);
    void                 EnterPosition(TRADING_TERMS entry_type);
+   void                 PositionCheckModify(void);
    void                 PositionCheckModify(TRADING_TERMS trade_signal);
+   void                 TrailStop(void);
+   void                 OpenBuyTrade(double lot_size, double ask_price, double sl_price, double tp_price);
+   void                 OpenSellTrade(double lot_size, double bid_price, double sl_price, double tp_price);
+   void                 CloseTrade(void);
+   void                 ResetTradeInfo(void);
 
 public:
 // Public Function/Constructor/Destructor Declaration:
@@ -57,6 +77,9 @@ public:
                                                uint atr_period,
                                                double atr_channel_factor,
                                                ENUM_APPLIED_PRICE atr_channel_app_price,
+                                               TRADING_METHOD trade_method,
+                                               bool move_stop,
+                                               bool trail_stop,
                                                ENUM_MA_METHOD ssl_ma_method,
                                                int ssl_period);
                         ~CSingleIndicatorTester(void);
@@ -77,6 +100,9 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
                                                uint atr_period,
                                                double atr_channel_factor,
                                                ENUM_APPLIED_PRICE atr_channel_app_price,
+                                               TRADING_METHOD trade_method,
+                                               bool move_stop,
+                                               bool trail_stop,
                                                ENUM_MA_METHOD ssl_ma_method,
                                                int ssl_period){
    // Initialize Inputs
@@ -89,13 +115,16 @@ CSingleIndicatorTester::CSingleIndicatorTester(string pair,
    ATR_Channel_Factor = atr_channel_factor;
    ATR_Channel_App_Price = atr_channel_app_price;
    
+   TradePosition.Trade_Method = trade_method;
+   TradePosition.Move_Stop = move_stop;
+   TradePosition.Trail_Stop = trail_stop;
+   
    SSL_MA_Method = ssl_ma_method;
    SSL_Period = ssl_period;
    
    // Other Variable Initialization
    Bar_Total = 0;
-   Ticket_Number = 0;
-   In_Trade = false;   
+   ResetTradeInfo();
 }
 //+------------------------------------------------------------------+
 //| Destructor:                                                      |
@@ -122,6 +151,7 @@ void CSingleIndicatorTester::OnDeinitEvent(const int reason){}
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::OnTickEvent(void){
    
+   PositionCheckModify();
    int Bar_Total_Current = iBars(Pair,Timeframe);
    
    if (Bar_Total != Bar_Total_Current){
@@ -129,8 +159,9 @@ void CSingleIndicatorTester::OnTickEvent(void){
       
       TRADING_TERMS trade_signal = LookForSignal();
       PositionCheckModify(trade_signal);
+      TrailStop();
       
-      if (!In_Trade){
+      if (!TradePosition.In_Trade){
          if (trade_signal == BUY_SIGNAL) EnterPosition(GO_LONG);
          else if (trade_signal == SELL_SIGNAL) EnterPosition(GO_SHORT);
       }
@@ -209,6 +240,7 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
    int digits = (int)SymbolInfoInteger(Pair,SYMBOL_DIGITS);
    double ask_price = NormalizeDouble(SymbolInfoDouble(Pair,SYMBOL_ASK),digits);
    double bid_price = NormalizeDouble(SymbolInfoDouble(Pair,SYMBOL_BID),digits);
+   double lot_step = SymbolInfoDouble(Pair,SYMBOL_VOLUME_STEP);
    
    if (entry_type == GO_LONG){
       double stop_distance = ask_price - atr_channel_lower[0];
@@ -216,13 +248,7 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
       double stop_price = NormalizeDouble(atr_channel_lower[0],digits);
       double profit_price = NormalizeDouble((ask_price + profit_distance),digits);
       double lot_size = CalculateLotSize(Risk_Percent,stop_distance);
-    
-      if (trade.Buy(lot_size,Pair,ask_price,stop_price,profit_price)){
-         if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-            Ticket_Number = trade.ResultOrder();
-            In_Trade = true;
-         }
-      }
+      OpenBuyTrade(lot_size,ask_price,stop_price,profit_price);
    }
    else if (entry_type == GO_SHORT){
       double stop_distance = atr_channel_upper[0] - bid_price;
@@ -230,12 +256,73 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
       double stop_price = NormalizeDouble(atr_channel_upper[0],digits);
       double profit_price = NormalizeDouble((bid_price - profit_distance),digits);
       double lot_size = CalculateLotSize(Risk_Percent,stop_distance);
+      OpenSellTrade(lot_size,bid_price,stop_price,profit_price);
+   }
+}
+//+------------------------------------------------------------------+
+//| Position Check/Modify Function:                                  |
+//+------------------------------------------------------------------+
+//|- Gets called every tick                                          |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::PositionCheckModify(void){
+   
+   if (TradePosition.In_Trade && !TradePosition.Modified){
       
-      if (trade.Sell(lot_size,Pair,bid_price,stop_price,profit_price)){
-         if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-            Ticket_Number = trade.ResultOrder();
-            In_Trade = true;
-         }
+      double ask_price = SymbolInfoDouble(Pair,SYMBOL_ASK);
+      double bid_price = SymbolInfoDouble(Pair,SYMBOL_BID);
+      double lot_step = SymbolInfoDouble(Pair,SYMBOL_VOLUME_STEP);
+      
+      switch (TradePosition.Trade_Method) {
+         case SIMPLE: break;
+         
+         case CLOSE_PARTIAL:
+            if (PositionSelectByTicket(TradePosition.TicketA)){
+               double trade_volume = PositionGetDouble(POSITION_VOLUME);
+               double close_volume = MathFloor((trade_volume/lot_step)/2)*lot_step;
+               
+               if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
+                  if (ask_price >= TradePosition.Profit_Target){
+                     if (trade.PositionClosePartial(TradePosition.TicketA,close_volume)){
+                        TradePosition.Modified = true;
+                     }
+                     if (TradePosition.Move_Stop){
+                        if (trade.PositionModify(TradePosition.TicketA,PositionGetDouble(POSITION_PRICE_OPEN),0)){
+                           Print("Moved SL to break even");
+                        }
+                     }
+                  }
+               }
+               else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+                  if (bid_price <= TradePosition.Profit_Target){
+                     if (trade.PositionClosePartial(TradePosition.TicketA,close_volume)){
+                        TradePosition.Modified = true;
+                     }
+                     if (TradePosition.Move_Stop){
+                        if (trade.PositionModify(TradePosition.TicketA,PositionGetDouble(POSITION_PRICE_OPEN),0)){
+                           Print("Moved SL to break even");
+                        }
+                     }
+                  }
+               }
+            }
+            else ResetTradeInfo();
+            break;
+         
+         case SPLIT_ORDER:
+            if (PositionSelectByTicket(TradePosition.TicketA)){
+               break;
+            }
+            else if (PositionSelectByTicket(TradePosition.TicketB)){
+               TradePosition.Modified = true;
+               TradePosition.TicketA = 0;
+               if (TradePosition.Move_Stop){
+                  if (trade.PositionModify(TradePosition.TicketB,PositionGetDouble(POSITION_PRICE_OPEN),0)){
+                     Print("Moved SL to break even");
+                  }
+               }
+            }
+            else ResetTradeInfo();
+            break;
       }
    }
 }
@@ -246,29 +333,199 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
 //+------------------------------------------------------------------+
 void CSingleIndicatorTester::PositionCheckModify(TRADING_TERMS trade_signal){
    
-   if (In_Trade){
-      if (PositionSelectByTicket(Ticket_Number)){
+   if (TradePosition.In_Trade){
+   
+      switch(TradePosition.Trade_Method) {
+         case SPLIT_ORDER:
+            if (PositionSelectByTicket(TradePosition.TicketB)){
+               if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
+                  if (trade_signal == SELL_SIGNAL || trade_signal == BEARISH || trade_signal == NO_SIGNAL) CloseTrade();
+               }
+               else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+                  if (trade_signal == BUY_SIGNAL || trade_signal == BULLISH || trade_signal == NO_SIGNAL) CloseTrade();
+               }
+            }
+            else ResetTradeInfo();
+            break;
+         default:
+            if (PositionSelectByTicket(TradePosition.TicketA)){
+               if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
+                  if (trade_signal == SELL_SIGNAL || trade_signal == BEARISH || trade_signal == NO_SIGNAL) CloseTrade();
+               }
+               else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+                  if (trade_signal == BUY_SIGNAL || trade_signal == BULLISH || trade_signal == NO_SIGNAL) CloseTrade();
+               }
+            }
+            else ResetTradeInfo(); 
+            break;
+      }
+   }
+}
+//+------------------------------------------------------------------+
+//| Trail Stop Function:                                             |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::TrailStop(void){
+   if (TradePosition.Trail_Stop && TradePosition.Modified){
+      double atr_upper[],atr_lower[];
+      CopyBuffer(ATR_Channel_Handle,1,1,1,atr_upper);
+      CopyBuffer(ATR_Channel_Handle,2,1,1,atr_lower);
+      int digits = (int)SymbolInfoInteger(Pair,SYMBOL_DIGITS);
       
-         if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
-            if (trade_signal == SELL_SIGNAL || trade_signal == BEARISH || trade_signal == NO_SIGNAL){
-               if (trade.PositionClose(Ticket_Number)){
-                  In_Trade = false;
-                  Ticket_Number = NULL;
+      if (TradePosition.Trade_Method == CLOSE_PARTIAL){
+         if (PositionSelectByTicket(TradePosition.TicketA)){
+            if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
+               double new_stop = NormalizeDouble(atr_lower[0],digits);
+               if (new_stop > PositionGetDouble(POSITION_SL)) trade.PositionModify(TradePosition.TicketA,new_stop,0);
+            }
+            else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+               double new_stop = NormalizeDouble(atr_upper[0],digits);
+               if (new_stop < PositionGetDouble(POSITION_SL)) trade.PositionModify(TradePosition.TicketA,new_stop,0);
+            }
+         }
+      }
+      else if (TradePosition.Trade_Method == SPLIT_ORDER){
+         if (PositionSelectByTicket(TradePosition.TicketB)){
+            if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY){
+               double new_stop = NormalizeDouble(atr_lower[0],digits);
+               if (new_stop > PositionGetDouble(POSITION_SL)) trade.PositionModify(TradePosition.TicketB,new_stop,0);
+            }
+            else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
+               double new_stop = NormalizeDouble(atr_upper[0],digits);
+               if (new_stop < PositionGetDouble(POSITION_SL)) trade.PositionModify(TradePosition.TicketB,new_stop,0);
+            }
+         }
+      }
+   }
+}
+//+------------------------------------------------------------------+
+//| Open Buy Position Function:                                      |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::OpenBuyTrade(double lot_size,double ask_price,double sl_price,double tp_price){
+
+   double lot_step = SymbolInfoDouble(Pair,SYMBOL_VOLUME_STEP);
+   switch(TradePosition.Trade_Method) {
+      
+      case SIMPLE:
+         if (trade.Buy(lot_size,Pair,ask_price,sl_price,tp_price)){
+            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+               TradePosition.TicketA = trade.ResultOrder();
+               TradePosition.In_Trade = true;
+            }
+         }
+         break;
+      
+      case CLOSE_PARTIAL:
+         if ((lot_size/2) < lot_step){
+            printf("%s > BUY could not be executed: Insufficient funds.",__FUNCTION__);
+            break;
+         }
+         else if (trade.Buy(lot_size,Pair,ask_price,sl_price,0)){
+            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+               TradePosition.TicketA = trade.ResultOrder();
+               TradePosition.In_Trade = true;
+               TradePosition.Profit_Target = tp_price;
+            }
+         }
+         break;
+      
+      case SPLIT_ORDER:
+         if ((lot_size/2) < lot_step){
+            printf("%s > BUY could not be executed: Insufficient funds.",__FUNCTION__);
+            break;
+         }
+         else{
+            if (trade.Buy(lot_size,Pair,ask_price,sl_price,tp_price)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketA = trade.ResultOrder();
+               }
+            }
+            if (trade.Buy(lot_size,Pair,ask_price,sl_price,0)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketB = trade.ResultOrder();
+                  TradePosition.In_Trade = true;
                }
             }
          }
-         else if (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL){
-            if (trade_signal == BUY_SIGNAL || trade_signal == BULLISH || trade_signal == NO_SIGNAL){
-               if (trade.PositionClose(Ticket_Number)){
-                  In_Trade = false;
-                  Ticket_Number = NULL;
+         break;
+   }
+}
+//+------------------------------------------------------------------+
+//| Open Sell Position Function:                                     |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::OpenSellTrade(double lot_size,double bid_price,double sl_price,double tp_price){
+
+   double lot_step = SymbolInfoDouble(Pair,SYMBOL_VOLUME_STEP);
+   switch(TradePosition.Trade_Method) {
+      
+      case SIMPLE:
+         if (trade.Sell(lot_size,Pair,bid_price,sl_price,tp_price)){
+            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+               TradePosition.TicketA = trade.ResultOrder();
+               TradePosition.In_Trade = true;
+            }
+         }
+         break;
+      
+      case CLOSE_PARTIAL:
+         if ((lot_size/2) < lot_step){
+            printf("%s > SELL could not be executed: Insufficient funds.",__FUNCTION__);
+            break;
+         }
+         else if (trade.Sell(lot_size,Pair,bid_price,sl_price,0)){
+            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+               TradePosition.TicketA = trade.ResultOrder();
+               TradePosition.In_Trade = true;
+               TradePosition.Profit_Target = tp_price;
+            }
+         }
+         break;
+      
+      case SPLIT_ORDER:
+         if ((lot_size/2) < lot_step){
+            printf("%s > SELL could not be executed: Insufficient funds.",__FUNCTION__);
+            break;
+         }
+         else{
+            if (trade.Sell(lot_size,Pair,bid_price,sl_price,tp_price)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketA = trade.ResultOrder();
                }
             }
-         } 
-      }
-      else{ // If we cannot select the trade, it has either hit the tp or sl.
-         In_Trade = false;
-         Ticket_Number = NULL;
-      }
+            if (trade.Sell(lot_size,Pair,bid_price,sl_price,0)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketB = trade.ResultOrder();
+                  TradePosition.In_Trade = true;
+               }
+            }
+         }
+         break;
    }
+}
+//+------------------------------------------------------------------+
+//| Close Position Function:                                         |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::CloseTrade(void){
+   switch(TradePosition.Trade_Method) {
+      case SPLIT_ORDER:
+         if(!TradePosition.Modified){
+            if (trade.PositionClose(TradePosition.TicketA) && trade.PositionClose(TradePosition.TicketB)) ResetTradeInfo();
+         }
+         else {
+            if (trade.PositionClose(TradePosition.TicketB)) ResetTradeInfo();
+         }
+         break;
+      default:
+         if (trade.PositionClose(TradePosition.TicketA)) ResetTradeInfo();
+         break;
+   }
+}
+//+------------------------------------------------------------------+
+//| Reset Trade Tracking Info Function:                              |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::ResetTradeInfo(void){
+   TradePosition.In_Trade = false;
+   TradePosition.Modified = false;
+   TradePosition.TicketA = 0;
+   TradePosition.TicketB = 0;
+   TradePosition.Profit_Target = 0;
 }
