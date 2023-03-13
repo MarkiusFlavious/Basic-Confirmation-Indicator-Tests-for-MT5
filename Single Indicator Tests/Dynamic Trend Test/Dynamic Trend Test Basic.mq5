@@ -1,7 +1,7 @@
 //+------------------------------------------------------------------+
 //| Includes:                                                        |
 //+------------------------------------------------------------------+
-#include "Class Template.mqh"
+#include "Dynamic Trend Test Class.mqh"
 //+------------------------------------------------------------------+
 //| Inputs:                                                          |
 //+------------------------------------------------------------------+
@@ -13,13 +13,16 @@ input double input_risk_percent = 1.0; // Risk Percent Per Trade
 input double input_profit_factor = 1.5; // Profit factor
 input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
-input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Channel Applied Price
+input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_CLOSE; // ATR Channel Applied Price
 
 input group "Trade Order Inputs:"
 input TRADING_METHOD input_trade_method = SIMPLE; // Trade Order Method
 input bool input_move_stop = true; // Move stop to break even after reaching profit target
 input bool input_trail_stop = false; // Trail Stop after reaching target profit
 
+input group "Dynamic Trend:"
+input uint input_dt_period = 14; // Period
+input uint input_dt_percent = 10; // Percent
 //+------------------------------------------------------------------+
 //|Global:                                                           |
 //+------------------------------------------------------------------+
@@ -32,7 +35,9 @@ CSingleIndicatorTester Simple_Strategy(_Symbol,
                                        input_atr_channel_app_price,
                                        input_trade_method,
                                        input_move_stop,
-                                       input_trail_stop);
+                                       input_trail_stop,
+                                       input_dt_period,
+                                       input_dt_percent);
 //+------------------------------------------------------------------+
 //| Expert Initialization Function:                                  |
 //+------------------------------------------------------------------+

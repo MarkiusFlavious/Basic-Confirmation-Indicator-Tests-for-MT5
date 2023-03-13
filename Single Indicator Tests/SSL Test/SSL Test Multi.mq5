@@ -12,7 +12,7 @@ input double input_risk_percent = 1.0; // Risk Percent Per Trade
 input double input_profit_factor = 1.5; // Profit factor
 input uint input_atr_period = 25; // ATR Period
 input double input_atr_channel_factor =1.5; // ATR Channel Factor
-input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_TYPICAL; // ATR Channel Applied Price
+input ENUM_APPLIED_PRICE input_atr_channel_app_price = PRICE_CLOSE; // ATR Channel Applied Price
 
 input group "Trade Order Inputs:"
 input TRADING_METHOD input_trade_method = SIMPLE; // Trade Order Method
