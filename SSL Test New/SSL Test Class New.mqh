@@ -46,11 +46,10 @@ private:
    TRADING_TERMS        LookForSignal(void);
    double               CalculateLotSize(double risk_input, double stop_distance);
    void                 EnterPosition(TRADING_TERMS entry_type);
+   void                 OpenTrade(TRADING_TERMS entry_type, double lot_size, double entry_price, double sl_price, double tp_price);
    void                 PositionCheckModify(void);
    void                 PositionCheckModify(TRADING_TERMS trade_signal);
    void                 TrailStop(void);
-   void                 OpenBuyTrade(double lot_size, double ask_price, double sl_price, double tp_price);
-   void                 OpenSellTrade(double lot_size, double bid_price, double sl_price, double tp_price);
    void                 CloseTrade(void);
    void                 ResetTradeInfo(void);
 
@@ -216,7 +215,7 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
       double stop_price = NormalizeDouble(atr_channel_lower[0],digits);
       double profit_price = NormalizeDouble((ask_price + profit_distance),digits);
       double lot_size = CalculateLotSize(Risk_Percent,stop_distance);
-      OpenBuyTrade(lot_size,ask_price,stop_price,profit_price);
+      OpenTrade(GO_LONG,lot_size,ask_price,stop_price,profit_price);
    }
    else if (entry_type == GO_SHORT){
       double stop_distance = atr_channel_upper[0] - bid_price;
@@ -224,7 +223,127 @@ void CSingleIndicatorTester::EnterPosition(TRADING_TERMS entry_type){
       double stop_price = NormalizeDouble(atr_channel_upper[0],digits);
       double profit_price = NormalizeDouble((bid_price - profit_distance),digits);
       double lot_size = CalculateLotSize(Risk_Percent,stop_distance);
-      OpenSellTrade(lot_size,bid_price,stop_price,profit_price);
+      OpenTrade(GO_SHORT,lot_size,bid_price,stop_price,profit_price);
+   }
+}
+//+------------------------------------------------------------------+
+//| Open Trade Function:                                             |
+//+------------------------------------------------------------------+
+void CSingleIndicatorTester::OpenTrade(TRADING_TERMS entry_type,double lot_size,double entry_price,double sl_price,double tp_price){
+
+   double lot_step = SymbolInfoDouble(Pair,SYMBOL_VOLUME_STEP);
+   switch(TradePosition.Trade_Method) {
+   
+      case SIMPLE:
+         if (entry_type == GO_LONG){
+            if (trade.Buy(lot_size,Pair,entry_price,sl_price,tp_price)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketA = trade.ResultOrder();
+                  TradePosition.In_Trade = true;
+                  break;
+               }
+               else {
+                  printf("An unexpected error occured. TRADE RETCODE != DONE.");
+                  break;
+               }
+            }
+         }
+         else if (trade.Sell(lot_size,Pair,entry_price,sl_price,tp_price)){
+            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+               TradePosition.TicketA = trade.ResultOrder();
+               TradePosition.In_Trade = true;
+               break;
+            }
+            else {
+               printf("An unexpected error occured. TRADE RETCODE != DONE.");
+               break;
+            }
+         }
+         break;
+      
+      case CLOSE_PARTIAL:
+         if ((lot_size/2) < lot_step){
+            printf("%s > Trade could not be executed: Insufficient fund for Partial Close.",__FUNCTION__);
+            break;
+         }
+         else if (entry_type == GO_LONG){
+            if (trade.Buy(lot_size,Pair,entry_price,sl_price,0)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketA = trade.ResultOrder();
+                  TradePosition.In_Trade = true;
+                  TradePosition.Profit_Target = tp_price;
+                  break;
+               }
+               else {
+                  printf("An Unexpected error occured. TRADE RETCODE != DONE.");
+                  break;
+               }
+            }
+         }
+         else if (trade.Sell(lot_size,Pair,entry_price,sl_price,0)){
+            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+               TradePosition.TicketA = trade.ResultOrder();
+               TradePosition.In_Trade = true;
+               TradePosition.Profit_Target = tp_price;
+               break;
+            }
+            else {
+               printf("An unexpected error occured. TRADE RETCODE != DONE.");
+               break;
+            }
+         }
+         break;
+      
+      case SPLIT_ORDER:
+         if ((lot_size/2) < lot_step){
+            printf("%s > Trade could not be executed: Insufficient fund for Split Order.",__FUNCTION__);
+            break;
+         }
+         else if (entry_type == GO_LONG){
+            if (trade.Buy(lot_size,Pair,entry_price,sl_price,tp_price)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketA = trade.ResultOrder();
+               }
+               else {
+                  printf("An unexpected error occured. TRADE RETCODE != DONE.");
+                  break;
+               }
+            }
+            if (trade.Buy(lot_size,Pair,entry_price,sl_price,0)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketB = trade.ResultOrder();
+                  TradePosition.In_Trade = true;
+                  break;
+               }
+               else {
+                  printf("An unexpected error occured. TRADE RETCODE != DONE. Order partially filled");
+                  break;
+               }
+            }
+         }
+         else{
+            if (trade.Sell(lot_size,Pair,entry_price,sl_price,tp_price)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketA = trade.ResultOrder();
+               }
+               else {
+                  printf("An unexpected error occured. TRADE RETCODE != DONE.");
+                  break;
+               }
+            }
+            if (trade.Sell(lot_size,Pair,entry_price,sl_price,0)){
+               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
+                  TradePosition.TicketB = trade.ResultOrder();
+                  TradePosition.In_Trade = true;
+                  break;
+               }
+               else {
+                  printf("An unexpected error occured. TRADE RETCODE != DONE. Order partially filled");
+                  break;
+               }
+            }
+         }
+         break;
    }
 }
 //+------------------------------------------------------------------+
@@ -363,110 +482,6 @@ void CSingleIndicatorTester::TrailStop(void){
             }
          }
       }
-   }
-}
-//+------------------------------------------------------------------+
-//| Open Buy Position Function:                                      |
-//+------------------------------------------------------------------+
-void CSingleIndicatorTester::OpenBuyTrade(double lot_size,double ask_price,double sl_price,double tp_price){
-
-   double lot_step = SymbolInfoDouble(Pair,SYMBOL_VOLUME_STEP);
-   switch(TradePosition.Trade_Method) {
-      
-      case SIMPLE:
-         if (trade.Buy(lot_size,Pair,ask_price,sl_price,tp_price)){
-            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-               TradePosition.TicketA = trade.ResultOrder();
-               TradePosition.In_Trade = true;
-            }
-         }
-         break;
-      
-      case CLOSE_PARTIAL:
-         if ((lot_size/2) < lot_step){
-            printf("%s > BUY could not be executed: Insufficient funds.",__FUNCTION__);
-            break;
-         }
-         else if (trade.Buy(lot_size,Pair,ask_price,sl_price,0)){
-            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-               TradePosition.TicketA = trade.ResultOrder();
-               TradePosition.In_Trade = true;
-               TradePosition.Profit_Target = tp_price;
-            }
-         }
-         break;
-      
-      case SPLIT_ORDER:
-         if ((lot_size/2) < lot_step){
-            printf("%s > BUY could not be executed: Insufficient funds.",__FUNCTION__);
-            break;
-         }
-         else{
-            if (trade.Buy(lot_size,Pair,ask_price,sl_price,tp_price)){
-               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-                  TradePosition.TicketA = trade.ResultOrder();
-               }
-            }
-            if (trade.Buy(lot_size,Pair,ask_price,sl_price,0)){
-               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-                  TradePosition.TicketB = trade.ResultOrder();
-                  TradePosition.In_Trade = true;
-               }
-            }
-         }
-         break;
-   }
-}
-//+------------------------------------------------------------------+
-//| Open Sell Position Function:                                     |
-//+------------------------------------------------------------------+
-void CSingleIndicatorTester::OpenSellTrade(double lot_size,double bid_price,double sl_price,double tp_price){
-
-   double lot_step = SymbolInfoDouble(Pair,SYMBOL_VOLUME_STEP);
-   switch(TradePosition.Trade_Method) {
-      
-      case SIMPLE:
-         if (trade.Sell(lot_size,Pair,bid_price,sl_price,tp_price)){
-            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-               TradePosition.TicketA = trade.ResultOrder();
-               TradePosition.In_Trade = true;
-            }
-         }
-         break;
-      
-      case CLOSE_PARTIAL:
-         if ((lot_size/2) < lot_step){
-            printf("%s > SELL could not be executed: Insufficient funds.",__FUNCTION__);
-            break;
-         }
-         else if (trade.Sell(lot_size,Pair,bid_price,sl_price,0)){
-            if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-               TradePosition.TicketA = trade.ResultOrder();
-               TradePosition.In_Trade = true;
-               TradePosition.Profit_Target = tp_price;
-            }
-         }
-         break;
-      
-      case SPLIT_ORDER:
-         if ((lot_size/2) < lot_step){
-            printf("%s > SELL could not be executed: Insufficient funds.",__FUNCTION__);
-            break;
-         }
-         else{
-            if (trade.Sell(lot_size,Pair,bid_price,sl_price,tp_price)){
-               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-                  TradePosition.TicketA = trade.ResultOrder();
-               }
-            }
-            if (trade.Sell(lot_size,Pair,bid_price,sl_price,0)){
-               if (trade.ResultRetcode() == TRADE_RETCODE_DONE){
-                  TradePosition.TicketB = trade.ResultOrder();
-                  TradePosition.In_Trade = true;
-               }
-            }
-         }
-         break;
    }
 }
 //+------------------------------------------------------------------+
