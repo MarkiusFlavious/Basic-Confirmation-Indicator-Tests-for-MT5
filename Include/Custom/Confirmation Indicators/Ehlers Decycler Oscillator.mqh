@@ -6,17 +6,19 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Ehlers Decycler Oscillator                                                                                       |
+   | ---------------------------------                                                                                       |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class EhlersDecyclerOscillator : public NumberCrossIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int Decycler_Period1;
+   int Decycler_Period2;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           EhlersDecyclerOscillator(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +26,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+EhlersDecyclerOscillator::EhlersDecyclerOscillator(void) {
+   Line_Buffer = 0;
+   Number_Cross = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void EhlersDecyclerOscillator::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"EhlersDecyclerOscillator.ex5",Decycler_Period1,Decycler_Period2);
 }

@@ -6,17 +6,20 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Elegant Oscillator                                                                                               |
+   | -------------------------                                                                                               |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class ElegantOscillator : public NumberCrossIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int Band_Edge;
+   int Oscillator_Period;
+   ENUM_APPLIED_PRICE Oscillator_Applied_Price;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           ElegantOscillator(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +27,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+ElegantOscillator::ElegantOscillator(void) {
+   Line_Buffer = 0;
+   Number_Cross = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void ElegantOscillator::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Elegant oscillator.ex5",Band_Edge,Oscillator_Period,Oscillator_Applied_Price);
 }

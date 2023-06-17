@@ -6,17 +6,21 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Zero Lag MACD                                                                                                    |
+   | --------------------                                                                                                    |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
+class ZeroLagMACD : public NumberCrossIndicator {
  
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   uint ZL_MACD_Fast_Period;
+   uint ZL_MACD_Slow_Period;
+   uint ZL_MACD_Signal_Period;
+   ENUM_APPLIED_PRICE ZL_MACD_App_Price;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           ZeroLagMACD(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +28,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+ZeroLagMACD::ZeroLagMACD(void) {
+   Line_Buffer = 1;
+   Number_Cross = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void ZeroLagMACD::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"zerolag_macd.ex5",ZL_MACD_Fast_Period,ZL_MACD_Slow_Period,ZL_MACD_Signal_Period,ZL_MACD_App_Price);
 }

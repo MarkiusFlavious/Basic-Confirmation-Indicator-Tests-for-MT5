@@ -6,17 +6,18 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Trend Flex X2                                                                                                    |
+   | --------------------                                                                                                    |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class TrendFlexX2 : public DualMethodIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int Fast_Period, Slow_Period;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           TrendFlexX2(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +25,17 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+TrendFlexX2::TrendFlexX2(void) {
+   Fast_Line_Buffer = 0;
+   Slow_Line_Buffer = 1;
+   Line_Buffer = Fast_Line_Buffer;
+   Number_Cross = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void TrendFlexX2::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"TrendFlex x 2.ex5",Fast_Period,Slow_Period);
 }

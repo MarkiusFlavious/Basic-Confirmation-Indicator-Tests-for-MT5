@@ -5,18 +5,38 @@
 #include <Custom/ConfirmationIndicator.mqh>
 
 /* ===========================================================================================================================
-   |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Enum                                                                                                                    |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+enum SUPERTREND_HULL_PRICES {
+   PR_CLOSE, // Close
+   PR_OPEN, // Open
+   PR_HIGH, // High
+   PR_LOW, // Low
+   PR_MEDIAN, // Median
+   PR_TYPICAL, // Typical
+   PR_WEIGHTED, // Weighted
+   PR_AVERAGE // Average (high+low+oprn+close)/4
+};
+
+/* ===========================================================================================================================
+   |                                                                                                                         |
+   | Class: Supertrend Hull                                                                                                  |
+   | ----------------------                                                                                                  |
+   =========================================================================================================================== */
+
+class SupertrendHull : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   bool Trail_With_ST;
+   int Hull_Period;
+   SUPERTREND_HULL_PRICES Hull_Price;
+   int ST_Atr_Period;
+   double ST_Atr_Multiplier;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           SupertrendHull(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +44,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+SupertrendHull::SupertrendHull(void) {
+   Color_Buffer = 1;
+   Bullish_Color = 0;
+   Bearish_Color = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void SupertrendHull::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Downloads\\super_trend_hull.ex5",Hull_Period,Hull_Price,ST_Atr_Period,ST_Atr_Multiplier);
 }

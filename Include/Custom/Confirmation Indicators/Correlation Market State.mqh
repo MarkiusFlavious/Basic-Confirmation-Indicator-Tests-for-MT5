@@ -6,17 +6,18 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Correlation Market State                                                                                         |
+   | -------------------------------                                                                                         |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class CorrelationMarketState : public NumberCrossIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs: 
+   int Cor_State_Period;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           CorrelationMarketState(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +25,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+CorrelationMarketState::CorrelationMarketState(void) {
+   Line_Buffer = 2;
+   Number_Cross = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void CorrelationMarketState::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Correlation market state.ex5", Cor_State_Period);
 }

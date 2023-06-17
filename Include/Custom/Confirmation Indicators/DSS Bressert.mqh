@@ -6,17 +6,20 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: DSS Bressert                                                                                                     |
+   | -------------------                                                                                                     |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class DSSBressert : public TwoLineCrossIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   uint DSS_EMA_Period;
+   uint DSS_Stoch_Period;
+   int DSS_Shift;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           DSSBressert(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +27,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+DSSBressert::DSSBressert(void) {
+   Fast_Line_Buffer = 0;
+   Slow_Line_Buffer = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void DSSBressert::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"dssbressert.ex5",DSS_EMA_Period,DSS_Stoch_Period,DSS_Shift);
 }

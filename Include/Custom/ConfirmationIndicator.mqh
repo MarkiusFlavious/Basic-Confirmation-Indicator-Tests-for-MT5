@@ -6,7 +6,18 @@
 #include <Custom/TradingTerms.mqh>
 
 /* ===========================================================================================================================
+   | Includes                                                                                                                |
+   =========================================================================================================================== */
+
+enum DUAL_MODE {
+   TWO_LINE_CROSS, // Two lines cross method
+   ZERO_CROSS // Zero cross method
+};
+
+/* ===========================================================================================================================
+   |                                                                                                                         |
    | Base Confirmation Indicator Class                                                                                       |
+   | ---------------------------------                                                                                       |
    =========================================================================================================================== */
 
 class ConfirmationIndicator : public CObject {
@@ -191,7 +202,9 @@ bool ConfirmationIndicator::ColorChangeLookback(int color_buffer,double bullish_
 }
 
 /* ===========================================================================================================================
+   |                                                                                                                         |
    | Two Line Cross Indicator Class                                                                                          |
+   | ------------------------------                                                                                          |
    =========================================================================================================================== */
 
 class TwoLineCrossIndicator : public ConfirmationIndicator {
@@ -216,7 +229,9 @@ bool TwoLineCrossIndicator::Lookback(int start_pos) {
 }
 
 /* ===========================================================================================================================
+   |                                                                                                                         |
    | Number Cross Indicator Class                                                                                            |
+   | ----------------------------                                                                                            |
    =========================================================================================================================== */
 
 class NumberCrossIndicator : public ConfirmationIndicator {
@@ -241,7 +256,9 @@ bool NumberCrossIndicator::Lookback(int start_pos) {
 }
 
 /* ===========================================================================================================================
+   |                                                                                                                         |
    | Color Change Indicator Class                                                                                            |
+   |                                                                                                                         |
    =========================================================================================================================== */
 
 class ColorChangeIndicator : public ConfirmationIndicator {
@@ -263,4 +280,37 @@ TRADING_TERMS ColorChangeIndicator::CheckSignal(int start_pos) {
 
 bool ColorChangeIndicator::Lookback(int start_pos) {
    return ColorChangeLookback(Color_Buffer, Bullish_Color, Bearish_Color, start_pos);
+}
+
+/* ===========================================================================================================================
+   |                                                                                                                         |
+   | Dual Method Indicator Class                                                                                             |
+   | ---------------------------                                                                                             |
+   | - Can be either TwoLineCross Or NumberCross methods                                                                     |
+   |                                                                                                                         |
+   =========================================================================================================================== */
+
+class DualMethodIndicator : public ConfirmationIndicator {
+
+protected:
+   int                     Fast_Line_Buffer, Slow_Line_Buffer;
+   double                  Number_Cross;
+   
+public:
+   int                     Line_Buffer;
+   DUAL_MODE               Method;
+   
+   TRADING_TERMS           CheckSignal(int start_pos) override;
+   bool                    Lookback(int start_pos) override;
+
+};
+
+TRADING_TERMS DualMethodIndicator::CheckSignal(int start_pos) override {
+   if (Method == TWO_LINE_CROSS) return TwoLineCrossMethod(Fast_Line_Buffer, Slow_Line_Buffer, start_pos);
+   else return NumberCrossMethod(Line_Buffer, Number_Cross, start_pos);
+}
+
+bool DualMethodIndicator::Lookback(int start_pos) override {
+   if (Method == TWO_LINE_CROSS) return TwoLinesCrossLookback(Fast_Line_Buffer, Slow_Line_Buffer, start_pos);
+   else return NumberCrossLookback(Line_Buffer, Number_Cross, start_pos);
 }

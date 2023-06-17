@@ -6,17 +6,20 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Squeeze                                                                                                          |
+   | --------------                                                                                                          |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class Squeeze : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int Squeeze_Period;
+   double Dev_Multiplier;
+   double Atr_Multiplier;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           Squeeze(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +27,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+Squeeze::Squeeze(void) {
+   Color_Buffer = 0;
+   Bullish_Color = 1;
+   Bearish_Color = -1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void Squeeze::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Squeeze.ex5",Squeeze_Period,Dev_Multiplier,Atr_Multiplier);
 }

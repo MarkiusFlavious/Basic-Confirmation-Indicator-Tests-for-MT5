@@ -6,17 +6,19 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Dynamic Trend                                                                                                    |
+   | --------------------                                                                                                    |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class DynamicTrend : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   uint DT_Period;
+   uint DT_Percent;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           DynamicTrend(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +26,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+DynamicTrend::DynamicTrend(void) {
+   Color_Buffer = 1;
+   Bullish_Color = 0;
+   Bearish_Color = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void DynamicTrend::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Downloads\\Dynamic_Trend.ex5",DT_Period,DT_Percent);
 }

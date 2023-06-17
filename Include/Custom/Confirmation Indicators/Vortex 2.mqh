@@ -6,17 +6,18 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Vortex 2                                                                                                         |
+   | ---------------                                                                                                         |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class Vortex2 : public TwoLineCrossIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int Vortex_Period;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           Vortex2(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +25,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+Vortex2::Vortex2(void) {
+   Fast_Line_Buffer = 2;
+   Slow_Line_Buffer = 4;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void Vortex2::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Vortex 2.ex5",Vortex_Period);
 }

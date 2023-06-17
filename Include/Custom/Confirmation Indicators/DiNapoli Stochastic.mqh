@@ -6,17 +6,20 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: DiNapoli Stochastic                                                                                              |
+   | --------------------------                                                                                              |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
+class DiNapoliStochastic : public NumberCrossIndicator {
  
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   uint FastK_Period;
+   uint SlowK_Period;
+   uint SlowD_Period;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           DiNapoliStochastic(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +27,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+DiNapoliStochastic::DiNapoliStochastic(void) {
+   Line_Buffer = 1;
+   Number_Cross = 50;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void DiNapoliStochastic::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"dinapolistochastic.ex5",FastK_Period,SlowK_Period,SlowD_Period,0);
 }

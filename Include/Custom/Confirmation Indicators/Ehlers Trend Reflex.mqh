@@ -6,17 +6,18 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Ehlers Trend Reflex                                                                                              |
+   | --------------------------                                                                                              |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class EhlersTrendReflex : public DualMethodIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int TReflex_Length;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           EhlersTrendReflex(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +25,17 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
+EhlersTrendReflex::EhlersTrendReflex(void) {
    Fast_Line_Buffer = 1;
    Slow_Line_Buffer = 0;
+   Line_Buffer = Fast_Line_Buffer;
+   Number_Cross = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void EhlersTrendReflex::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"EhlersTrendReflex.ex5",TReflex_Length);
 }

@@ -5,18 +5,32 @@
 #include <Custom/ConfirmationIndicator.mqh>
 
 /* ===========================================================================================================================
+   | Enum                                                                                                                    |
+   =========================================================================================================================== */
+enum DSLU_DISPLAY{
+   ZONES_YES = (int)true,   // Display filled zoned
+   ZONES_NO  = (int)false,  // No filled zones display
+};
+
+/* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: DSLU RSI Average                                                                                                 |
+   | -----------------------                                                                                                 |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class DSLURSIAverage : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int DSLU_RSI_Period;
+   int DSLU_MA_Period;
+   ENUM_MA_METHOD DSLU_MA_Method;
+   ENUM_APPLIED_PRICE DSLU_App_Price;
+   double DSLU_Signal_Period;
+   DSLU_DISPLAY DSLU_Zones;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           DSLURSIAverage(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +38,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+DSLURSIAverage::DSLURSIAverage(void) {
+   Color_Buffer = 5;
+   Bullish_Color = 1;
+   Bearish_Color = 2;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void DSLURSIAverage::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Dslu RSI of average.ex5",DSLU_RSI_Period,DSLU_MA_Period,DSLU_MA_Method,DSLU_App_Price,DSLU_Signal_Period,DSLU_Zones);
 }

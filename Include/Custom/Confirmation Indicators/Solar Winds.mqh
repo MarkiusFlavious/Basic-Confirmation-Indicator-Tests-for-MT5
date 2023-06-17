@@ -5,18 +5,29 @@
 #include <Custom/ConfirmationIndicator.mqh>
 
 /* ===========================================================================================================================
-   |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Enum                                                                                                                    |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+enum SOLAR_WINDS_TOGGLE {
+   ENUM_OFF,
+   ENUM_ON
+};
+
+/* ===========================================================================================================================
+   |                                                                                                                         |
+   | Class: Solar Winds                                                                                                      |
+   | ------------------                                                                                                      |
+   =========================================================================================================================== */
+
+class SolarWinds : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int SW_Period;
+   int SW_Smooth;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           SolarWinds(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +35,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+SolarWinds::SolarWinds(void) {
+   Color_Buffer = 1;
+   Bullish_Color = 0;
+   Bearish_Color = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void SolarWinds::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Solar Winds.ex5",ENUM_ON,ENUM_OFF,SW_Period,SW_Smooth,false);
 }

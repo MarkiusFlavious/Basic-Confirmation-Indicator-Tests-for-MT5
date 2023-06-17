@@ -5,18 +5,31 @@
 #include <Custom/ConfirmationIndicator.mqh>
 
 /* ===========================================================================================================================
-   |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Enum                                                                                                                    |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+enum T3_TYPE {
+   TILLSON_T3, // Tim Tillson way of calculation
+   FULKSMAT_T3 // Fulks/Matulich way of calculation
+};
+
+/* ===========================================================================================================================
+   |                                                                                                                         |
+   | Class: Trend Trigger Factor                                                                                             |
+   | ---------------------------                                                                                             |
+   =========================================================================================================================== */
+
+class TrendTriggerFactor : public NumberCrossIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int TTF_Period;
+   int TTF_T3_Period;
+   double TTF_T3_Hot;
+   T3_TYPE TTF_T3_Type;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           TrendTriggerFactor(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +37,15 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+TrendTriggerFactor::TrendTriggerFactor(void) {
+   Line_Buffer = 2;
+   Number_Cross = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void TrendTriggerFactor::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Downloads\\Trend trigger factor.ex5",TTF_Period,TTF_T3_Period,TTF_T3_Hot,TTF_T3_Type);
 }

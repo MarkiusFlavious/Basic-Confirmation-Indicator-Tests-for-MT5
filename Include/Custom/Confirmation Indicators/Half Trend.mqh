@@ -6,17 +6,18 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Half Trend                                                                                                       |
+   | -----------------                                                                                                       |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class HalfTrend : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
-   
-                           SSLChannelChart(void);
+   // Inputs:
+   int Half_Trend_Amp;
+    
+   // Functions:
+                           HalfTrend(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +25,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+HalfTrend::HalfTrend(void) {
+   Color_Buffer = 1;
+   Bullish_Color = 1;
+   Bearish_Color = 0;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void HalfTrend::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Half Trend New Alert.ex5",Half_Trend_Amp,"Arrow",233,234,10,"Alerts","alert.wav",3,3,false,false,false,false);
 }

@@ -6,17 +6,19 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: PTLv2                                                                                                            |
+   | ------------                                                                                                            |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class PTLv2 : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   int PTL_Fast_Length;
+   int PTL_Slow_Length;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           PTLv2(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +26,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+PTLv2::PTLv2(void) {
+   Color_Buffer = 4;
+   Bullish_Color = 0;
+   Bearish_Color = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void PTLv2::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Downloads\\PTL (2).ex5",PTL_Fast_Length,PTL_Slow_Length);
 }

@@ -6,33 +6,39 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Confirmation Indicator Template                                                                                  |
+   | --------------------------------------                                                                                  |
    =========================================================================================================================== */
+// ConfirmationIndicator, TwoLineCrossIndicator, NumberCrossIndicator, ColorChangeIndicator, DualMethodIndicator
+class IndicatorTemplate : public ConfirmationIndicator {
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
    
-                           SSLChannelChart(void);
+   // Functions:
+                           IndicatorTemplate(void);
    void                    Initialize(void) override;
+   //TRADING_TERMS           CheckSignal(int start_pos) override;
+   //bool                    Lookback(int start_pos) override;
 };
 
 /* ===========================================================================================================================
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+IndicatorTemplate::IndicatorTemplate(void) {
+   // The 3 types already have their buffer variables declared
+   
+   // Two Lines Cross has: int Fast_Line_Buffer, Slow_Line_Buffer
+   // Number Cross has: int Line_Buffer, double Number_Cross
+   // Color Change has: int Color_Buffer, double Bullish_Color, Bearish_Color
+   // Dual Method has: Two Line and Number Cross variables
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void IndicatorTemplate::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,".ex5");
 }

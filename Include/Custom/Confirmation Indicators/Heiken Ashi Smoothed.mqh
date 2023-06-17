@@ -3,20 +3,24 @@
    =========================================================================================================================== */
 
 #include <Custom/ConfirmationIndicator.mqh>
+#include <SmoothAlgorithms.mqh>
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Heiken Ashi Smoothed                                                                                             |
+   | ---------------------------                                                                                             |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class HeikenAshiSmoothed : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs: 
+   Smooth_Method Smoothing_Method;
+   int Smoothing_Length;                   
+   int Smoothing_Phase;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           HeikenAshiSmoothed(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +28,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+HeikenAshiSmoothed::HeikenAshiSmoothed(void) {
+   Color_Buffer = 4;
+   Bullish_Color = 0;
+   Bearish_Color = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void HeikenAshiSmoothed::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"heiken_ashi_smoothed.ex5",Smoothing_Method,Smoothing_Length,Smoothing_Phase);
 }

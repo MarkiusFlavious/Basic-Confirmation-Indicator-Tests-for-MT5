@@ -6,17 +6,18 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Gann High Low                                                                                                    |
+   | --------------------                                                                                                    |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class GannHighLow : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
-   
-                           SSLChannelChart(void);
+   // Inputs:
+   int Activator_Period;
+    
+   // Functions:
+                           GannHighLow(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +25,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+GannHighLow::GannHighLow(void) {
+   Color_Buffer = 1;
+   Bullish_Color = 0;
+   Bearish_Color = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void GannHighLow::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"Gann high low activator (oscillator).ex5",Activator_Period);
 }

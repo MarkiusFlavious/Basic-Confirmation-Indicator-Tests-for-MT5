@@ -6,17 +6,20 @@
 
 /* ===========================================================================================================================
    |                                                                                                                         |
-   | Class: SSL Channel Chart                                                                                                |
-   |                                                                                                                         |
+   | Class: Supertrend                                                                                                       |
+   | -----------------                                                                                                       |
    =========================================================================================================================== */
 
-class SSLChannelChart : public TwoLineCrossIndicator {
- 
+class Supertrend : public ColorChangeIndicator {
+
 public:
-   ENUM_MA_METHOD          SSL_Method;
-   int                     SSL_Length;
+   // Inputs:
+   bool Trail_With_ST;
+   int Super_Period;
+   double Super_Multiplier;
    
-                           SSLChannelChart(void);
+   // Functions:
+                           Supertrend(void);
    void                    Initialize(void) override;
 };
 
@@ -24,15 +27,16 @@ public:
    | Constructor                                                                                                             |
    =========================================================================================================================== */
 
-SSLChannelChart::SSLChannelChart(void) {
-   Fast_Line_Buffer = 1;
-   Slow_Line_Buffer = 0;
+Supertrend::Supertrend(void) {
+   Color_Buffer = 3;
+   Bullish_Color = 0;
+   Bearish_Color = 1;
 }
 
 /* ===========================================================================================================================
    | Initialization Function                                                                                                 |
    =========================================================================================================================== */
 
-void SSLChannelChart::Initialize(void) override {
-   Handle = iCustom(Pair,Timeframe,"SSL_Channel_Chart.ex5",SSL_Method,SSL_Length);
+void Supertrend::Initialize(void) override {
+   Handle = iCustom(Pair,Timeframe,"supertrend.ex5",Super_Period,Super_Multiplier,false);
 }
