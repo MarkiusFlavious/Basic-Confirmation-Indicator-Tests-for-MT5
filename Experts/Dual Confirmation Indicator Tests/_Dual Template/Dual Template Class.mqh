@@ -178,8 +178,8 @@ TRADING_TERMS CDualIndicatorTest::CheckConfirmationIncidcators(void){
    /*
    TRADING_TERMS c1_signal = C1_Indicator.CheckSignal(1);
    TRADING_TERMS c2_signal = C2_Indicator.CheckSignal(1);
-   bool c1_lookback = C1_DSLURSIAverage.Lookback(1);
-   bool c2_lookback = C2_TrendFlexX2.Lookback(1);
+   bool c1_lookback = C1_Indicator.Lookback(1);
+   bool c2_lookback = C2_Indicator.Lookback(1);
    
    switch (Indicator_Dominance_Mode) {
       
